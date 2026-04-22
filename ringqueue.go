@@ -106,11 +106,13 @@ func (q *RingQueue[T]) Pop(ctx context.Context) (T, error) {
 	}
 }
 
-// Drain removes and returns all items in FIFO order without blocking.
+// Drain removes and returns all current items in FIFO order without blocking.
 // Returns nil if the queue is empty.
 //
-// Intended for use after [RingQueue.Pop] returns [ErrClosed], to consume
-// any items that were enqueued before Close was called.
+// Unlike [RingQueue.Pop], Drain does not wait for new items — it returns
+// whatever is in the buffer at the moment of the call. Useful for bulk
+// reads or flushing remaining items during shutdown without going through
+// the blocking Pop interface.
 func (q *RingQueue[T]) Drain() []T {
 	q.mu.Lock()
 	defer q.mu.Unlock()
