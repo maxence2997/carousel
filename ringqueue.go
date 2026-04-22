@@ -15,6 +15,7 @@ var ErrClosed = errors.New("carousel: queue is closed")
 
 // RingQueue is a concurrent fixed-capacity FIFO queue backed by [RingBuffer].
 //
+// The zero value is not usable; create instances with [NewRingQueue].
 // Multiple goroutines may call Enqueue and ForceEnqueue concurrently.
 // Pop is intended to be called by a single goroutine (consumer).
 // Close is idempotent and must be called when the queue is no longer needed.
@@ -139,6 +140,9 @@ func (q *RingQueue[T]) Cap() int {
 func (q *RingQueue[T]) Close() {
 	q.mu.Lock()
 	defer q.mu.Unlock()
+	if q.closed {
+		return
+	}
 	q.closed = true
 	q.cond.Broadcast()
 }

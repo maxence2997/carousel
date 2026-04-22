@@ -63,7 +63,7 @@ go func() {
     for {
         item, err := q.Pop(ctx)
         if err != nil {
-            // context cancelled (ctx.Err()) or queue closed (ErrClosed)
+            // context canceled (ctx.Err()) or queue closed (ErrClosed)
             return
         }
         process(item)
@@ -74,7 +74,7 @@ go func() {
 items := q.Drain()
 ```
 
-`Pop` blocks until an item is available, the context is cancelled, or the queue is closed.
+`Pop` blocks until an item is available, the context is canceled, or the queue is closed.
 Available items are always delivered before cancellation or close signals are returned.
 
 ## Errors
