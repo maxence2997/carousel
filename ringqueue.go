@@ -119,13 +119,15 @@ func (q *RingQueue[T]) Len() int {
 	return q.buf.Len()
 }
 
-// Cap returns the maximum capacity of the queue.
+// Cap returns the fixed capacity of the queue.
+// Capacity is set at construction and never changes; RingQueue does not support resizing.
+// No lock needed — the value is immutable after construction.
 func (q *RingQueue[T]) Cap() int {
-	return q.buf.Cap() // immutable after construction, no lock needed
+	return q.buf.Cap()
 }
 
 // Close marks the queue as closed and wakes any goroutine blocked in Pop.
-// Safe to call exactly once.
+// Idempotent — safe to call more than once; subsequent calls are no-ops.
 func (q *RingQueue[T]) Close() {
 	q.mu.Lock()
 	q.closed = true
