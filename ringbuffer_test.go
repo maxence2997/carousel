@@ -136,6 +136,10 @@ func TestPop_D2_RemovesOldestFirst(t *testing.T) {
 	assert.Equal(t, 2, rb.Len())
 }
 
+// TestPop_D3_ZeroesSlotForGC is intentionally omitted from the external test
+// package because it requires access to internal fields to be meaningful.
+// See ringbuffer_internal_test.go for the authoritative GC-zeroing assertion.
+
 func TestPop_D4_Wraparound(t *testing.T) {
 	t.Parallel()
 	rb := carousel.NewRingBuffer[int](3)

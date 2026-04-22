@@ -75,6 +75,7 @@ func (q *RingQueue[T]) ForceEnqueue(item T) (evicted bool, err error) {
 // context is canceled and the buffer is empty.
 //
 // Concurrent calls to Pop are not supported — use a single consumer goroutine.
+// ctx must be non-nil; pass [context.Background] to opt out of cancellation.
 func (q *RingQueue[T]) Pop(ctx context.Context) (T, error) {
 	// Register context cancellation to wake the blocked cond.Wait.
 	// The callback acquires q.mu before broadcasting to prevent a lost-wakeup:

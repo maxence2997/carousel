@@ -227,11 +227,12 @@ func TestRingQueue_F1_ConcurrentEnqueueNoRace(t *testing.T) {
 	q := carousel.NewRingQueue[[]byte](bufSize)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	var popped int
 	var popMu sync.Mutex
+	popDone := make(chan struct{})
 	go func() {
+		defer close(popDone)
 		for {
 			_, err := q.Pop(ctx)
 			if err != nil {
@@ -254,10 +255,9 @@ func TestRingQueue_F1_ConcurrentEnqueueNoRace(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	time.Sleep(20 * time.Millisecond)
 	cancel()
-	time.Sleep(10 * time.Millisecond)
 	q.Close()
+	<-popDone
 
 	popMu.Lock()
 	total := popped + q.Len()
