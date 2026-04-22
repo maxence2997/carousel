@@ -84,9 +84,10 @@ func (q *RingQueue[T]) Pop(ctx context.Context) (T, error) {
 	// the broadcast fires after Wait() is entered, not before.
 	stop := context.AfterFunc(ctx, func() {
 		q.mu.Lock()
+		defer q.mu.Unlock()
 		q.cond.Broadcast()
-		q.mu.Unlock()
 	})
+
 	defer stop()
 
 	q.mu.Lock()
