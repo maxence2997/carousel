@@ -36,9 +36,9 @@ jobs:
           test -z "$(gofmt -l .)" || (echo "formatting issues — run 'make fmt'"; exit 1)
           test -z "$(go run golang.org/x/tools/cmd/goimports@latest -local github.com/maxence2997 -l .)" || (echo "import issues — run 'make fmt'"; exit 1)
       - name: lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: latest
+          version: v2.11.2
       - name: test
         run: go test -v -race -count=${{ env.TEST_COUNT }} -timeout ${{ env.TEST_TIMEOUT }} ./...
 
