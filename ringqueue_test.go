@@ -221,10 +221,10 @@ func TestRingQueue_E1_CapIsConstant(t *testing.T) {
 
 func TestRingQueue_F1_ConcurrentEnqueueNoRace(t *testing.T) {
 	t.Parallel()
-	const cap = 16
+	const bufSize = 16
 	const workers = 8
 	const perWorker = 64
-	q := carousel.NewRingQueue[[]byte](cap)
+	q := carousel.NewRingQueue[[]byte](bufSize)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
