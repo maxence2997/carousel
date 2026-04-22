@@ -69,9 +69,10 @@ func (q *RingQueue[T]) ForceEnqueue(item T) (evicted bool, err error) {
 }
 
 // Pop blocks until an item is available, the context is cancelled, or the
-// queue is closed. Returns [ErrClosed] when the queue is closed and all
-// remaining items have been consumed. Returns ctx.Err() when the context
-// is cancelled.
+// queue is closed. Available items are always delivered before cancellation
+// or close signals are returned. Returns [ErrClosed] when the queue is closed
+// and all remaining items have been consumed. Returns ctx.Err() when the
+// context is cancelled and the buffer is empty.
 //
 // Concurrent calls to Pop are a data race — use a single consumer goroutine.
 func (q *RingQueue[T]) Pop(ctx context.Context) (T, error) {
