@@ -91,12 +91,14 @@ func TestRingQueue_C2_PopBlocksUntilEnqueue(t *testing.T) {
 	t.Parallel()
 	q := carousel.NewRingQueue[[]byte](4)
 	defer q.Close()
+	ready := make(chan struct{})
 	result := make(chan []byte, 1)
 	go func() {
+		close(ready)
 		data, _ := q.Pop(context.Background())
 		result <- data
 	}()
-	time.Sleep(10 * time.Millisecond) // let Pop block
+	<-ready
 	require.NoError(t, q.Enqueue([]byte("wakeup")))
 	select {
 	case data := <-result:
@@ -109,12 +111,14 @@ func TestRingQueue_C2_PopBlocksUntilEnqueue(t *testing.T) {
 func TestRingQueue_C3_PopUnblocksOnClose(t *testing.T) {
 	t.Parallel()
 	q := carousel.NewRingQueue[[]byte](4)
+	ready := make(chan struct{})
 	errCh := make(chan error, 1)
 	go func() {
+		close(ready)
 		_, err := q.Pop(context.Background())
 		errCh <- err
 	}()
-	time.Sleep(10 * time.Millisecond)
+	<-ready
 	q.Close()
 	select {
 	case err := <-errCh:
@@ -129,12 +133,14 @@ func TestRingQueue_C4_PopUnblocksOnContextCancel(t *testing.T) {
 	q := carousel.NewRingQueue[[]byte](4)
 	defer q.Close()
 	ctx, cancel := context.WithCancel(context.Background())
+	ready := make(chan struct{})
 	errCh := make(chan error, 1)
 	go func() {
+		close(ready)
 		_, err := q.Pop(ctx)
 		errCh <- err
 	}()
-	time.Sleep(10 * time.Millisecond)
+	<-ready
 	cancel()
 	select {
 	case err := <-errCh:
