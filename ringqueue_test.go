@@ -166,11 +166,13 @@ func TestRingQueue_C4b_PopCancelRaceLostWakeup(t *testing.T) {
 			done <- err
 		}()
 		cancel()
+		timer := time.NewTimer(time.Second)
 		select {
 		case err := <-done:
+			timer.Stop()
 			assert.ErrorIs(t, err, context.Canceled)
 			q.Close()
-		case <-time.After(time.Second):
+		case <-timer.C:
 			t.Fatal("Pop blocked despite context cancel (lost-wakeup regression)")
 		}
 	}
