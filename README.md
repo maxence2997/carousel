@@ -25,7 +25,7 @@ go get github.com/maxence2997/carousel
 ```go
 import "github.com/maxence2997/carousel"
 
-buf := carousel.NewRingBuffer[int](4)
+buf := carousel.NewRingBuffer[int](3)
 
 buf.Push(1)
 buf.Push(2)
