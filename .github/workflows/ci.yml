@@ -19,11 +19,18 @@ jobs:
   lint-test:
     name: lint-test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TEST_COUNT: ${{ (github.ref == 'refs/heads/main' || github.base_ref == 'main') && '100' || (github.ref == 'refs/heads/develop' || github.base_ref == 'develop') && '50' || '10' }}
+      TEST_TIMEOUT: ${{ (github.ref == 'refs/heads/main' || github.base_ref == 'main') && '300s' || (github.ref == 'refs/heads/develop' || github.base_ref == 'develop') && '180s' || '120s' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Download modules
+        run: go mod download
       - name: fmt
         run: |
           test -z "$(gofmt -l .)" || (echo "formatting issues — run 'make fmt'"; exit 1)
@@ -33,7 +40,7 @@ jobs:
         with:
           version: latest
       - name: test
-        run: go test -race -count=50 ./...
+        run: go test -v -race -count=${{ env.TEST_COUNT }} -timeout ${{ env.TEST_TIMEOUT }} ./...
 
   check:
     name: check
