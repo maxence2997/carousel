@@ -17,7 +17,7 @@ var ErrClosed = errors.New("carousel: queue is closed")
 //
 // Multiple goroutines may call Enqueue and ForceEnqueue concurrently.
 // Pop is intended to be called by a single goroutine (consumer).
-// Close must be called exactly once when the queue is no longer needed.
+// Close is idempotent and must be called when the queue is no longer needed.
 type RingQueue[T any] struct {
 	mu     sync.Mutex
 	cond   *sync.Cond
@@ -69,10 +69,11 @@ func (q *RingQueue[T]) ForceEnqueue(item T) (evicted bool, err error) {
 }
 
 // Pop blocks until an item is available, the context is cancelled, or the
-// queue is closed. Returns [ErrClosed] when the queue is closed and empty.
-// Returns ctx.Err() when the context is cancelled.
+// queue is closed. Returns [ErrClosed] when the queue is closed and all
+// remaining items have been consumed. Returns ctx.Err() when the context
+// is cancelled.
 //
-// Must be called by a single goroutine (consumer).
+// Concurrent calls to Pop are a data race — use a single consumer goroutine.
 func (q *RingQueue[T]) Pop(ctx context.Context) (T, error) {
 	// Register context cancellation to wake the blocked cond.Wait.
 	// The callback acquires q.mu before broadcasting to prevent a lost-wakeup:
@@ -121,8 +122,8 @@ func (q *RingQueue[T]) Len() int {
 
 // Cap returns the fixed capacity of the queue.
 // Capacity is set at construction and never changes; RingQueue does not support resizing.
-// No lock needed — the value is immutable after construction.
 func (q *RingQueue[T]) Cap() int {
+	// No lock needed — capacity is immutable after construction.
 	return q.buf.Cap()
 }
 
