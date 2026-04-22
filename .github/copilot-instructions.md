@@ -50,7 +50,7 @@ make test-cover # coverage report → coverage.html
 ## Git
 
 - Branch strategy: `feat/<name>`, `refactor/<name>`, `bugfix/<name>`, `fix/<name>`, `chore/<name>`.
-  Never push directly to `develop` or `main`.
+  Never push directly to `main`. Open a PR from a feature branch into `main`.
 - Commit messages: follow `.github/instructions/commit-message-instructions.md`. English only.
   One logical change per commit.
 - Pull request description: follow `.github/PULL_REQUEST_TEMPLATE.md`. Fill in every section.

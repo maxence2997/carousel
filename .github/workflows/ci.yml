@@ -3,13 +3,13 @@ name: CI
 on:
   workflow_dispatch:
   push:
-    branches: [main, develop, 'feat/**', 'feature/**', 'refactor/**', 'bugfix/**', 'fix/**', 'chore/**']
+    branches: [main, 'feat/**', 'feature/**', 'refactor/**', 'bugfix/**', 'fix/**', 'chore/**']
     paths-ignore:
       - '**.md'
       - 'LICENSE'
       - '.github/instructions/**'
   pull_request:
-    branches: [main, develop]
+    branches: [main]
     paths-ignore:
       - '**.md'
       - 'LICENSE'
@@ -21,8 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      TEST_COUNT: ${{ (github.ref == 'refs/heads/main' || github.base_ref == 'main') && '100' || (github.ref == 'refs/heads/develop' || github.base_ref == 'develop') && '50' || '10' }}
-      TEST_TIMEOUT: ${{ (github.ref == 'refs/heads/main' || github.base_ref == 'main') && '300s' || (github.ref == 'refs/heads/develop' || github.base_ref == 'develop') && '180s' || '120s' }}
+      TEST_COUNT: ${{ (github.ref == 'refs/heads/main' || github.base_ref == 'main') && '100' || '10' }}
+      TEST_TIMEOUT: ${{ (github.ref == 'refs/heads/main' || github.base_ref == 'main') && '300s' || '120s' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
