@@ -135,7 +135,7 @@ func (q *RingQueue[T]) Cap() int {
 // Idempotent — safe to call more than once; subsequent calls are no-ops.
 func (q *RingQueue[T]) Close() {
 	q.mu.Lock()
+	defer q.mu.Unlock()
 	q.closed = true
 	q.cond.Broadcast()
-	q.mu.Unlock()
 }
