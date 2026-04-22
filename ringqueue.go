@@ -132,6 +132,6 @@ func (q *RingQueue[T]) Cap() int {
 func (q *RingQueue[T]) Close() {
 	q.mu.Lock()
 	q.closed = true
-	q.mu.Unlock()
 	q.cond.Broadcast()
+	q.mu.Unlock()
 }
