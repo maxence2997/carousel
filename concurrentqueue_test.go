@@ -175,6 +175,37 @@ func TestConcurrentQueue_D4_PopDrainsBeforeClose(t *testing.T) {
 	assert.ErrorIs(t, err3, carousel.ErrClosed)
 }
 
+// ── E: Drain ─────────────────────────────────────────────────────────────────
+
+func TestConcurrentQueue_E1_DrainReturnsAllItems(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewConcurrentQueue[[]byte](4)
+	defer q.Close()
+	require.NoError(t, q.Enqueue([]byte("x")))
+	require.NoError(t, q.Enqueue([]byte("y")))
+	got := q.Drain()
+	assert.Equal(t, [][]byte{[]byte("x"), []byte("y")}, got)
+	assert.Equal(t, 0, q.Len())
+}
+
+func TestConcurrentQueue_E2_DrainReturnsNilWhenEmpty(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewConcurrentQueue[[]byte](4)
+	defer q.Close()
+	assert.Nil(t, q.Drain())
+}
+
+func TestConcurrentQueue_E3_DrainAfterClose(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewConcurrentQueue[[]byte](4)
+	require.NoError(t, q.Enqueue([]byte("a")))
+	require.NoError(t, q.Enqueue([]byte("b")))
+	q.Close()
+	got := q.Drain()
+	assert.Equal(t, [][]byte{[]byte("a"), []byte("b")}, got)
+	assert.Equal(t, 0, q.Len())
+}
+
 // ── F: Concurrency ───────────────────────────────────────────────────────────
 
 // TestConcurrentQueue_F1_ConcurrentEnqueueTryPopNoRace verifies that concurrent
