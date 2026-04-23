@@ -100,7 +100,7 @@ Measured on Apple M1 Max (`darwin/arm64`). Run `make bench` to reproduce.
 
 `Drain` allocates one `[]T` slice to hold the returned items; all other operations are zero-allocation.
 
-Benchmark history (CI, `linux/amd64`): [maxence2997.github.io/carousel/dev/bench](https://maxence2997.github.io/carousel/dev/bench/)
+Benchmark history (CI, `linux/amd64`): [benchmarks](https://maxence2997.github.io/carousel/benchmarks/)
 
 ## License
 
