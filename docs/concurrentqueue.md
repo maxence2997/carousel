@@ -133,9 +133,9 @@ Measured on Apple M1 Max (`darwin/arm64`). Run `make bench` to reproduce.
 
 | Operation | ns/op | B/op | allocs/op |
 |---|---:|---:|---:|
-| `Enqueue` (serial, no contention) | 20.5 | 0 | 0 |
+| `Enqueue` (serial, no contention) | 20.8 | 0 | 0 |
 | `TryPop` (serial, no contention) | 21.2 | 0 | 0 |
-| `Pop` -- 1 producer + 1 consumer goroutine | 28.7 | 0 | 0 |
-| `Enqueue` -- GOMAXPROCS parallel writers | 57.7 | 0 | 0 |
+| `Pop` -- 1 producer + 1 consumer goroutine | 27.6 | 0 | 0 |
+| `Enqueue` -- GOMAXPROCS parallel writers | 57.3 | 0 | 0 |
 
 All operations are zero-allocation. Compared to `RingQueue` (~107 ns/op parallel), `ConcurrentQueue` achieves ~2x throughput under GOMAXPROCS contention.
