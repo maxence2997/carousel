@@ -19,6 +19,7 @@ go get github.com/maxence2997/carousel
 |---|---|---|
 | `RingBuffer[T]` | Fixed-capacity FIFO circular buffer. Not safe for concurrent use. | [docs/ringbuffer.md](docs/ringbuffer.md) |
 | `RingQueue[T]` | Concurrent blocking FIFO queue backed by `RingBuffer`. Supports drop-on-full and evict-oldest-on-full strategies. | [docs/ringqueue.md](docs/ringqueue.md) |
+| `ConcurrentQueue[T]` | Lock-free MPMC FIFO queue. Multiple producers and consumers, no mutex. | [docs/concurrentqueue.md](docs/concurrentqueue.md) |
 
 ## Quick start
 
@@ -53,9 +54,25 @@ for {
 }
 ```
 
+### ConcurrentQueue
+
+```go
+q := carousel.NewConcurrentQueue[[]byte](256)
+defer q.Close()
+
+// producer goroutines (many)
+if err := q.Enqueue(data); err != nil {
+    // err == ErrFull or ErrClosed
+}
+
+// consumer goroutines (many)
+item, err := q.Pop(ctx)         // spin-waits until available
+item, ok  := q.TryPop()         // non-blocking
+```
+
 ## Benchmarks
 
-See per-type results in [docs/ringbuffer.md](docs/ringbuffer.md#benchmarks) and [docs/ringqueue.md](docs/ringqueue.md#benchmarks).
+See per-type results in [docs/ringbuffer.md](docs/ringbuffer.md#benchmarks), [docs/ringqueue.md](docs/ringqueue.md#benchmarks), and [docs/concurrentqueue.md](docs/concurrentqueue.md#benchmarks).
 
 Benchmark history (CI, `linux/amd64`): [benchmarks](https://maxence2997.github.io/carousel/benchmarks/)
 

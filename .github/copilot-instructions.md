@@ -10,9 +10,10 @@ Module path: `github.com/maxence2997/carousel`. Zero external production depende
 | Type | Description |
 |------|-------------|
 | `RingBuffer[T]` | Fixed-capacity FIFO circular buffer. Not safe for concurrent use. |
-| `RingQueue[T]` | Concurrent blocking FIFO queue backed by `RingBuffer`. mutex + sync.Cond + context.Context. |
+| `RingQueue[T]` | Concurrent blocking FIFO queue backed by `RingBuffer`. mutex + sync.Cond + context.Context. N-producer, 1-consumer. |
+| `ConcurrentQueue[T]` | Lock-free MPMC FIFO queue. Vyukov-style per-slot sequence counters + atomic CAS. Spin-wait Pop. |
 
-Both types live in the root package `carousel`. Import: `github.com/maxence2997/carousel`.
+All types live in the root package `carousel`. Import: `github.com/maxence2997/carousel`.
 
 ## File Index
 
@@ -23,6 +24,8 @@ Both types live in the root package `carousel`. Import: `github.com/maxence2997/
 | `ringbuffer_test.go` | `RingBuffer[T]` tests |
 | `ringqueue.go` | `RingQueue[T]`, `NewRingQueue[T]`, `ErrFull`, `ErrClosed` |
 | `ringqueue_test.go` | `RingQueue[T]` tests |
+| `concurrentqueue.go` | `ConcurrentQueue[T]`, `NewConcurrentQueue[T]` |
+| `concurrentqueue_test.go` | `ConcurrentQueue[T]` tests + benchmarks |
 
 ## Development Workflow
 

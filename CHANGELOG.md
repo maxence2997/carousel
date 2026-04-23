@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+
+- `ConcurrentQueue[T]` — lock-free MPMC FIFO queue backed by a Vyukov-style ring
+  with per-slot sequence counters. Supports multiple concurrent producers and consumers
+  without any mutex. Zero-allocation Enqueue and TryPop.
+- `RingQueue[T].TryPop() (T, bool)` — non-blocking pop for `RingQueue`
+
 ## [1.0.2] - 2026-04-23
 
 ### Added
