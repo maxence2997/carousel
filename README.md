@@ -93,7 +93,7 @@ Measured on Apple M1 Max (`darwin/arm64`). Run `make bench` to reproduce.
 | `RingBuffer` | `Push` | 3.2 | 0 | 0 |
 | `RingBuffer` | `ForcePush` | 5.7 | 0 | 0 |
 | `RingBuffer` | `Pop` | 2.9 | 0 | 0 |
-| `RingBuffer` | `Drain` (256 items) | 1 632 | 6 528 | 1 |
+| `RingBuffer` | `Drain` (256 items, ~6 ns/item) | 1,632 | 6,528 | 1 |
 | `RingQueue` | `ForceEnqueue` (serial) | 13.8 | 0 | 0 |
 | `RingQueue` | `Pop` — producer+consumer | 53 | 0 | 0 |
 | `RingQueue` | `ForceEnqueue` — ×10 parallel | 107 | 0 | 0 |
