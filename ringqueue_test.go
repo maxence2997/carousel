@@ -323,3 +323,59 @@ func TestRingQueue_F2_DropOldestIsAtomic(t *testing.T) {
 		assert.LessOrEqual(t, q.Len(), bufSize)
 	}
 }
+
+// ── Benchmarks ───────────────────────────────────────────────────────────────
+
+// BenchmarkRingQueue_ForceEnqueue measures single-goroutine ForceEnqueue
+// throughput with no contention; evicts oldest when full.
+func BenchmarkRingQueue_ForceEnqueue(b *testing.B) {
+	q := carousel.NewRingQueue[[]byte](256)
+	defer q.Close()
+	data := make([]byte, 64)
+	b.ResetTimer()
+	for range b.N {
+		q.ForceEnqueue(data) //nolint:errcheck
+	}
+}
+
+// BenchmarkRingQueue_ProducerConsumer measures ForceEnqueue throughput with a
+// concurrent consumer draining the queue — the canonical send-buffer pattern.
+func BenchmarkRingQueue_ProducerConsumer(b *testing.B) {
+	q := carousel.NewRingQueue[[]byte](256)
+	data := make([]byte, 64)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	consumed := make(chan struct{})
+	go func() {
+		defer close(consumed)
+		for {
+			if _, err := q.Pop(ctx); err != nil {
+				return
+			}
+		}
+	}()
+
+	b.ResetTimer()
+	for range b.N {
+		q.ForceEnqueue(data) //nolint:errcheck
+	}
+	b.StopTimer()
+
+	cancel()
+	q.Close()
+	<-consumed
+}
+
+// BenchmarkRingQueue_Parallel measures ForceEnqueue throughput under mutex
+// contention with GOMAXPROCS concurrent writers.
+func BenchmarkRingQueue_Parallel(b *testing.B) {
+	q := carousel.NewRingQueue[[]byte](512)
+	defer q.Close()
+	data := make([]byte, 64)
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			q.ForceEnqueue(data) //nolint:errcheck
+		}
+	})
+}
