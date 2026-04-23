@@ -10,10 +10,7 @@ on:
       - '.github/instructions/**'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'LICENSE'
-      - '.github/instructions/**'
+    # No paths-ignore — PRs always run CI regardless of what changed.
 
 jobs:
   lint-test:
