@@ -12,7 +12,7 @@ import (
 //
 //   - sequence == pos          → slot is empty and writable by the next producer at pos
 //   - sequence == pos+1        → slot has been written and is readable by the consumer at pos
-//   - sequence == pos+cap+1    → slot has been read and is writable again by the next producer
+//   - sequence == pos+cap      → slot has been read and is writable again by the next producer
 type slot[T any] struct {
 	sequence atomic.Uint64
 	data     T
@@ -41,10 +41,10 @@ type ConcurrentQueue[T any] struct {
 
 // NewConcurrentQueue creates a ConcurrentQueue with the given capacity.
 //
-// Panics if capacity < 1.
+// Panics if capacity < 2 (the Vyukov MPMC algorithm requires at least 2 slots).
 func NewConcurrentQueue[T any](capacity int) *ConcurrentQueue[T] {
-	if capacity < 1 {
-		panic(fmt.Sprintf("carousel: concurrent queue: capacity must be at least 1, got %d", capacity))
+	if capacity < 2 {
+		panic(fmt.Sprintf("carousel: concurrent queue: capacity must be at least 2, got %d (Vyukov MPMC requires cap >= 2 to distinguish written and consumed slot states)", capacity))
 	}
 	q := &ConcurrentQueue[T]{
 		slots: make([]slot[T], capacity),
@@ -176,11 +176,12 @@ func (q *ConcurrentQueue[T]) Pop(ctx context.Context) (T, error) {
 // If called on an active queue, new items may be enqueued concurrently during
 // the drain; no atomicity guarantee is made in that case.
 func (q *ConcurrentQueue[T]) Drain() []T {
-	n := q.tail.Load() - q.head.Load()
-	if n == 0 {
+	tail := q.tail.Load()
+	head := q.head.Load()
+	if tail <= head {
 		return nil
 	}
-	out := make([]T, 0, n)
+	out := make([]T, 0, tail-head)
 	for {
 		v, ok := q.TryPop()
 		if !ok {

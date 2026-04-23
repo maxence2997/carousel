@@ -6,11 +6,12 @@ import (
 	"sync"
 )
 
-// ErrFull is returned by [RingQueue.Enqueue] when the queue is at capacity.
+// ErrFull is returned by [RingQueue.Enqueue] and [ConcurrentQueue.Enqueue]
+// when the queue is at capacity.
 var ErrFull = errors.New("carousel: queue is full")
 
-// ErrClosed is returned by [RingQueue.Enqueue], [RingQueue.ForceEnqueue], and
-// [RingQueue.Pop] after [RingQueue.Close] has been called.
+// ErrClosed is returned by queue operations after the queue has been closed.
+// See [RingQueue.Close] and [ConcurrentQueue.Close].
 var ErrClosed = errors.New("carousel: queue is closed")
 
 // RingQueue is a concurrent fixed-capacity FIFO queue backed by [RingBuffer].

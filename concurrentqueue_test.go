@@ -90,9 +90,31 @@ func TestConcurrentQueue_C1_CapIsConstant(t *testing.T) {
 	assert.Equal(t, 8, q.Cap())
 }
 
-func TestConcurrentQueue_C2_PanicsOnZeroCapacity(t *testing.T) {
+func TestConcurrentQueue_C2_PanicsOnInvalidCapacity(t *testing.T) {
 	t.Parallel()
 	assert.Panics(t, func() { carousel.NewConcurrentQueue[int](0) })
+	assert.Panics(t, func() { carousel.NewConcurrentQueue[int](1) })
+	assert.Panics(t, func() { carousel.NewConcurrentQueue[int](-1) })
+}
+
+func TestConcurrentQueue_C3_CapacityTwo(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewConcurrentQueue[int](2)
+	defer q.Close()
+
+	require.NoError(t, q.Enqueue(42))
+	require.NoError(t, q.Enqueue(99))
+	assert.ErrorIs(t, q.Enqueue(7), carousel.ErrFull)
+
+	v, ok := q.TryPop()
+	assert.True(t, ok)
+	assert.Equal(t, 42, v)
+
+	// Slot reuse: enqueue again after pop.
+	require.NoError(t, q.Enqueue(7))
+	v, ok = q.TryPop()
+	assert.True(t, ok)
+	assert.Equal(t, 99, v)
 }
 
 // ── D: Pop ───────────────────────────────────────────────────────────────────
@@ -238,6 +260,81 @@ func TestConcurrentQueue_F1_ConcurrentEnqueueTryPopNoRace(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+}
+
+// TestConcurrentQueue_F2_DataIntegrity verifies that every successfully enqueued
+// item is dequeued exactly once — no duplicates, no losses.
+func TestConcurrentQueue_F2_DataIntegrity(t *testing.T) {
+	t.Parallel()
+	const producers = 4
+	const consumers = 4
+	const perProducer = 200
+	q := carousel.NewConcurrentQueue[int](64)
+
+	// Each producer enqueues unique values: producer p sends p*perProducer+i.
+	var prodWg sync.WaitGroup
+	enqueued := make([][]int, producers)
+	for p := range producers {
+		prodWg.Add(1)
+		go func() {
+			defer prodWg.Done()
+			base := p * perProducer
+			for i := range perProducer {
+				v := base + i
+				for q.Enqueue(v) == carousel.ErrFull {
+					runtime.Gosched()
+				}
+				enqueued[p] = append(enqueued[p], v)
+			}
+		}()
+	}
+
+	// Consumers collect popped values.
+	consumed := make(chan int, producers*perProducer)
+	var consWg sync.WaitGroup
+	ctx, cancel := context.WithCancel(context.Background())
+	for range consumers {
+		consWg.Add(1)
+		go func() {
+			defer consWg.Done()
+			for {
+				v, err := q.Pop(ctx)
+				if err != nil {
+					return
+				}
+				consumed <- v
+			}
+		}()
+	}
+
+	prodWg.Wait()
+	// Drain remaining items, then stop consumers.
+	cancel()
+	q.Close()
+	consWg.Wait()
+	// Collect any items left in the queue after consumers exited.
+	for {
+		v, ok := q.TryPop()
+		if !ok {
+			break
+		}
+		consumed <- v
+	}
+	close(consumed)
+
+	got := make(map[int]int) // value → count
+	for v := range consumed {
+		got[v]++
+	}
+
+	want := make(map[int]int)
+	for _, vals := range enqueued {
+		for _, v := range vals {
+			want[v]++
+		}
+	}
+
+	assert.Equal(t, want, got, "every enqueued item must be dequeued exactly once")
 }
 
 // ── Benchmarks ───────────────────────────────────────────────────────────────

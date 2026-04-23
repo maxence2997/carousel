@@ -45,7 +45,7 @@ if item, ok := q.TryPop(); ok {
 
 **`NewConcurrentQueue[T](capacity int) *ConcurrentQueue[T]`**
 
-Allocates a new queue of the given capacity. Panics if `capacity < 1`.
+Allocates a new queue of the given capacity. Panics if `capacity < 2` (the Vyukov MPMC algorithm requires at least 2 slots to distinguish between written and consumed slot states).
 
 ---
 
@@ -134,6 +134,6 @@ Measured on Apple M1 Max (`darwin/arm64`). Run `make bench` to reproduce.
 | `Enqueue` (serial, no contention) | 20.5 | 0 | 0 |
 | `TryPop` (serial, no contention) | 21.2 | 0 | 0 |
 | `Pop` -- 1 producer + 1 consumer goroutine | 28.7 | 0 | 0 |
-| `Enqueue` -- x10 parallel writers | 57.7 | 0 | 0 |
+| `Enqueue` -- GOMAXPROCS parallel writers | 57.7 | 0 | 0 |
 
 All operations are zero-allocation. Compared to `RingQueue` (~107 ns/op parallel), `ConcurrentQueue` achieves ~2x throughput under GOMAXPROCS contention.
