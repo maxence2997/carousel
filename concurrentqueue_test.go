@@ -2,6 +2,7 @@ package carousel_test
 
 import (
 	"context"
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -237,4 +238,100 @@ func TestConcurrentQueue_F1_ConcurrentEnqueueTryPopNoRace(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+}
+
+// ── Benchmarks ───────────────────────────────────────────────────────────────
+
+// BenchmarkConcurrentQueue_Enqueue measures single-goroutine Enqueue throughput
+// with no contention; queue is kept from filling by interleaving TryPop.
+func BenchmarkConcurrentQueue_Enqueue(b *testing.B) {
+	q := carousel.NewConcurrentQueue[[]byte](256)
+	defer q.Close()
+	data := make([]byte, 64)
+	b.ResetTimer()
+	for range b.N {
+		if q.Enqueue(data) == carousel.ErrFull {
+			q.TryPop()
+			q.Enqueue(data) //nolint:errcheck
+		}
+	}
+}
+
+// BenchmarkConcurrentQueue_TryPop measures single-goroutine TryPop throughput
+// from a pre-filled queue.
+func BenchmarkConcurrentQueue_TryPop(b *testing.B) {
+	q := carousel.NewConcurrentQueue[[]byte](256)
+	defer q.Close()
+	data := make([]byte, 64)
+	b.ResetTimer()
+	for range b.N {
+		if _, ok := q.TryPop(); !ok {
+			q.Enqueue(data) //nolint:errcheck
+			q.TryPop()      //nolint:errcheck
+		}
+	}
+}
+
+// BenchmarkConcurrentQueue_ProducerConsumer measures Enqueue throughput with a
+// concurrent consumer draining the queue via Pop.
+func BenchmarkConcurrentQueue_ProducerConsumer(b *testing.B) {
+	q := carousel.NewConcurrentQueue[[]byte](256)
+	data := make([]byte, 64)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	consumed := make(chan struct{})
+	go func() {
+		defer close(consumed)
+		for {
+			if _, err := q.Pop(ctx); err != nil {
+				return
+			}
+		}
+	}()
+
+	b.ResetTimer()
+	for range b.N {
+		for q.Enqueue(data) == carousel.ErrFull {
+			runtime.Gosched()
+		}
+	}
+	b.StopTimer()
+
+	cancel()
+	q.Close()
+	<-consumed
+}
+
+// BenchmarkConcurrentQueue_Parallel measures Enqueue throughput under
+// GOMAXPROCS concurrent writers — the primary benchmark target (sub-30 ns/op).
+func BenchmarkConcurrentQueue_Parallel(b *testing.B) {
+	q := carousel.NewConcurrentQueue[[]byte](512)
+	defer q.Close()
+	data := make([]byte, 64)
+
+	// Background consumer to prevent the queue from filling up permanently.
+	ctx, cancel := context.WithCancel(context.Background())
+	consumed := make(chan struct{})
+	go func() {
+		defer close(consumed)
+		for {
+			if _, err := q.Pop(ctx); err != nil {
+				return
+			}
+		}
+	}()
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			for q.Enqueue(data) == carousel.ErrFull {
+				runtime.Gosched()
+			}
+		}
+	})
+	b.StopTimer()
+
+	cancel()
+	q.Close()
+	<-consumed
 }
