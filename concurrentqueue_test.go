@@ -1,8 +1,10 @@
 package carousel_test
 
 import (
+	"context"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -90,6 +92,87 @@ func TestConcurrentQueue_C1_CapIsConstant(t *testing.T) {
 func TestConcurrentQueue_C2_PanicsOnZeroCapacity(t *testing.T) {
 	t.Parallel()
 	assert.Panics(t, func() { carousel.NewConcurrentQueue[int](0) })
+}
+
+// ── D: Pop ───────────────────────────────────────────────────────────────────
+
+func TestConcurrentQueue_D1_PopBlocksUntilEnqueue(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewConcurrentQueue[[]byte](4)
+	defer q.Close()
+	ready := make(chan struct{})
+	result := make(chan []byte, 1)
+	go func() {
+		close(ready)
+		data, _ := q.Pop(context.Background())
+		result <- data
+	}()
+	<-ready
+	require.NoError(t, q.Enqueue([]byte("wakeup")))
+	select {
+	case data := <-result:
+		assert.Equal(t, []byte("wakeup"), data)
+	case <-time.After(time.Second):
+		t.Fatal("Pop did not unblock after Enqueue")
+	}
+}
+
+func TestConcurrentQueue_D2_PopUnblocksOnClose(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewConcurrentQueue[[]byte](4)
+	ready := make(chan struct{})
+	errCh := make(chan error, 1)
+	go func() {
+		close(ready)
+		_, err := q.Pop(context.Background())
+		errCh <- err
+	}()
+	<-ready
+	q.Close()
+	select {
+	case err := <-errCh:
+		assert.ErrorIs(t, err, carousel.ErrClosed)
+	case <-time.After(time.Second):
+		t.Fatal("Pop did not unblock after Close")
+	}
+}
+
+func TestConcurrentQueue_D3_PopUnblocksOnContextCancel(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewConcurrentQueue[[]byte](4)
+	defer q.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	ready := make(chan struct{})
+	errCh := make(chan error, 1)
+	go func() {
+		close(ready)
+		_, err := q.Pop(ctx)
+		errCh <- err
+	}()
+	<-ready
+	cancel()
+	select {
+	case err := <-errCh:
+		assert.ErrorIs(t, err, context.Canceled)
+	case <-time.After(time.Second):
+		t.Fatal("Pop did not unblock after context cancel")
+	}
+}
+
+func TestConcurrentQueue_D4_PopDrainsBeforeClose(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewConcurrentQueue[[]byte](4)
+	require.NoError(t, q.Enqueue([]byte("a")))
+	require.NoError(t, q.Enqueue([]byte("b")))
+	q.Close()
+	data1, err1 := q.Pop(context.Background())
+	data2, err2 := q.Pop(context.Background())
+	_, err3 := q.Pop(context.Background())
+	assert.NoError(t, err1)
+	assert.NoError(t, err2)
+	assert.Equal(t, []byte("a"), data1)
+	assert.Equal(t, []byte("b"), data2)
+	assert.ErrorIs(t, err3, carousel.ErrClosed)
 }
 
 // ── F: Concurrency ───────────────────────────────────────────────────────────
