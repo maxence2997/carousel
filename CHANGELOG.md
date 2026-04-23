@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-04-23
+
+### Added
+
+- `BenchmarkRingQueue_ForceEnqueue`, `BenchmarkRingQueue_ProducerConsumer`,
+  `BenchmarkRingQueue_Parallel` — benchmark coverage for `RingQueue`
+
 ## [1.0.0] - 2026-04-23
 
 ### Changed
@@ -26,6 +33,7 @@
 - `ErrFull` — returned by `Enqueue` when the queue is at capacity
 - `ErrClosed` — returned by `Enqueue`, `ForceEnqueue`, and `Pop` after `Close` is called
 
-[Unreleased]: https://github.com/maxence2997/carousel/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/maxence2997/carousel/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/maxence2997/carousel/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/maxence2997/carousel/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/maxence2997/carousel/releases/tag/v0.1.0
