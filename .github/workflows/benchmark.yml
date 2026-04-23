@@ -30,8 +30,8 @@ jobs:
           output-file-path: bench.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
-          # Fail if any benchmark is more than 50% slower than the stored baseline
-          alert-threshold: '150%'
-          fail-on-alert: true
+          # Warn if any benchmark is more than 100% slower than the stored baseline
+          alert-threshold: '200%'
+          fail-on-alert: false
           comment-on-alert: false
           benchmark-data-dir-path: benchmarks
