@@ -17,9 +17,9 @@ go get github.com/maxence2997/carousel
 
 | Type | Concurrency model | Description | Doc |
 |---|---|---|---|
-| `RingBuffer[T]` | Caller-synchronized | Fixed-capacity FIFO circular buffer. Not safe for concurrent use without external locking. | [docs/ringbuffer.md](docs/ringbuffer.md) |
-| `RingQueue[T]` | MPSC | Blocking FIFO queue backed by `RingBuffer`. N producers, 1 consumer. Supports drop-on-full and evict-oldest-on-full. | [docs/ringqueue.md](docs/ringqueue.md) |
-| `ConcurrentQueue[T]` | MPMC | Lock-free FIFO queue. N producers, M consumers, no mutex. | [docs/concurrentqueue.md](docs/concurrentqueue.md) |
+| `RingBuffer[T]` | Caller-synchronized | Fixed-capacity FIFO circular buffer. Not safe for concurrent use without external locking. | [docs/ring-buffer.md](docs/ring-buffer.md) |
+| `RingQueue[T]` | MPSC | Blocking FIFO queue backed by `RingBuffer`. N producers, 1 consumer. Supports drop-on-full and evict-oldest-on-full. | [docs/ring-queue.md](docs/ring-queue.md) |
+| `ConcurrentQueue[T]` | MPMC | Lock-free FIFO queue. N producers, M consumers, no mutex. | [docs/concurrent-queue.md](docs/concurrent-queue.md) |
 
 > **MPSC** = Multiple Producer, Single Consumer.
 > **MPMC** = Multiple Producer, Multiple Consumer.
@@ -75,7 +75,7 @@ item, ok  := q.TryPop()         // non-blocking
 
 ## Benchmarks
 
-See per-type results in [docs/ringbuffer.md](docs/ringbuffer.md#benchmarks), [docs/ringqueue.md](docs/ringqueue.md#benchmarks), and [docs/concurrentqueue.md](docs/concurrentqueue.md#benchmarks).
+See per-type results in [docs/ring-buffer.md](docs/ring-buffer.md#benchmarks), [docs/ring-queue.md](docs/ring-queue.md#benchmarks), and [docs/concurrent-queue.md](docs/concurrent-queue.md#benchmarks).
 
 Benchmark history (CI, `linux/amd64`): [benchmarks](https://maxence2997.github.io/carousel/benchmarks/)
 

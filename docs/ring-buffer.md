@@ -1,8 +1,8 @@
-# RingBuffer[T]
+# RingBuffer
 
 > Concurrency: **caller-synchronized** — not safe for concurrent use without external locking.
 
-Fixed-capacity FIFO circular buffer backed by a pre-allocated array. If you need concurrent access, use [RingQueue[T]](ringqueue.md) or [ConcurrentQueue[T]](concurrentqueue.md).
+Fixed-capacity FIFO circular buffer backed by a pre-allocated array. If you need concurrent access, use [RingQueue](ring-queue.md) or [ConcurrentQueue](concurrent-queue.md).
 
 ## Quick start
 

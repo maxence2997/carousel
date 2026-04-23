@@ -1,13 +1,17 @@
-# RingQueue[T]
+# RingQueue
 
 > Concurrency: **MPSC** (Multiple Producer, Single Consumer) — N goroutines may enqueue concurrently; only one goroutine should call Pop.
 
-Concurrent blocking FIFO queue backed by [RingBuffer[T]](ringbuffer.md).
+Concurrent blocking FIFO queue backed by [RingBuffer](ring-buffer.md).
 
 ## Concurrency model
 
-```
-producer goroutines ──Enqueue/ForceEnqueue──▶ [ queue ] ──Pop──▶ consumer goroutine
+```mermaid
+flowchart LR
+    P1[Producer 1] -->|Enqueue| Q[(RingQueue)]
+    P2[Producer 2] -->|Enqueue| Q
+    PN[Producer N] -->|Enqueue| Q
+    Q -->|Pop| C[Consumer]
 ```
 
 - **Producers never block.** `Enqueue` rejects when full; `ForceEnqueue` evicts the oldest item.
@@ -79,6 +83,10 @@ Removes and returns the front item. Blocks if the queue is empty.
 
 `ctx` must be non-nil. Pass `context.Background()` to block indefinitely until an item is available or the queue is closed.
 
+**`TryPop() (T, bool)`**
+
+Removes and returns the front item without blocking. Returns `(zero, false)` if the queue is empty.
+
 ---
 
 ### Lifecycle
@@ -116,6 +124,6 @@ Measured on Apple M1 Max (`darwin/arm64`). Run `make bench` to reproduce.
 |---|---:|---:|---:|
 | `ForceEnqueue` (serial, no contention) | 13.8 | 0 | 0 |
 | `Pop` — 1 producer + 1 consumer goroutine | 53 | 0 | 0 |
-| `ForceEnqueue` — ×10 parallel writers | 107 | 0 | 0 |
+| `ForceEnqueue` — GOMAXPROCS parallel writers | 107 | 0 | 0 |
 
 All operations are zero-allocation. The serial baseline (~14 ns) reflects uncontended mutex overhead on top of the underlying `RingBuffer` (~3 ns).

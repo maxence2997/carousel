@@ -1,4 +1,4 @@
-# ConcurrentQueue[T]
+# ConcurrentQueue
 
 > Concurrency: **MPMC** (Multiple Producer, Multiple Consumer) — any number of goroutines may enqueue and dequeue concurrently without a mutex.
 
@@ -6,14 +6,20 @@ Lock-free FIFO queue backed by a Vyukov-style ring with per-slot sequence counte
 
 ## Concurrency model
 
-```
-producer goroutines ──Enqueue──> [ queue ] ──Pop/TryPop──> consumer goroutines
+```mermaid
+flowchart LR
+    P1[Producer 1] -->|Enqueue| Q[(ConcurrentQueue)]
+    P2[Producer 2] -->|Enqueue| Q
+    PN[Producer N] -->|Enqueue| Q
+    Q -->|Pop / TryPop| C1[Consumer 1]
+    Q -->|Pop / TryPop| C2[Consumer 2]
+    Q -->|Pop / TryPop| CM[Consumer M]
 ```
 
 - **Multiple producers, multiple consumers.** All methods are safe for concurrent use.
 - **Enqueue never blocks.** Returns `ErrFull` when the queue is at capacity.
-- **Pop spins while the queue is empty.** Uses `runtime.Gosched()` between attempts. Best suited for always-busy high-throughput pipelines where consumers are rarely idle. For idle-heavy workloads, use [RingQueue](ringqueue.md) instead.
-- **No `ForceEnqueue`.** Drop-oldest semantics are not supported in the lock-free design. Use [RingQueue](ringqueue.md) if you need evict-oldest behaviour.
+- **Pop spins while the queue is empty.** Uses `runtime.Gosched()` between attempts. Best suited for always-busy high-throughput pipelines where consumers are rarely idle. For idle-heavy workloads, use [RingQueue](ring-queue.md) instead.
+- **No `ForceEnqueue`.** Drop-oldest semantics are not supported in the lock-free design. Use [RingQueue](ring-queue.md) if you need evict-oldest behaviour.
 
 ## Quick start
 
@@ -59,7 +65,7 @@ Appends `item` to the back of the queue. Non-blocking.
 
 | Error | Condition |
 |---|---|
-| `ErrFull` | Queue is at capacity -- item is not added |
+| `ErrFull` | Queue is at capacity — item is not added |
 | `ErrClosed` | Queue has been closed |
 
 ---
@@ -135,7 +141,7 @@ Measured on Apple M1 Max (`darwin/arm64`). Run `make bench` to reproduce.
 |---|---:|---:|---:|
 | `Enqueue` (serial, no contention) | 20.8 | 0 | 0 |
 | `TryPop` (serial, no contention) | 21.2 | 0 | 0 |
-| `Pop` -- 1 producer + 1 consumer goroutine | 27.6 | 0 | 0 |
-| `Enqueue` -- GOMAXPROCS parallel writers | 57.3 | 0 | 0 |
+| `Pop` — 1 producer + 1 consumer goroutine | 27.6 | 0 | 0 |
+| `Enqueue` — GOMAXPROCS parallel writers | 57.3 | 0 | 0 |
 
-All operations are zero-allocation. Compared to `RingQueue` (~107 ns/op parallel), `ConcurrentQueue` achieves ~2x throughput under GOMAXPROCS contention.
+All operations are zero-allocation. Compared to RingQueue (~107 ns/op parallel), ConcurrentQueue achieves ~2x throughput under GOMAXPROCS contention.
