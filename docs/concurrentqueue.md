@@ -1,6 +1,8 @@
 # ConcurrentQueue[T]
 
-Lock-free MPMC FIFO queue backed by a Vyukov-style ring with per-slot sequence counters.
+> Concurrency: **MPMC** (Multiple Producer, Multiple Consumer) — any number of goroutines may enqueue and dequeue concurrently without a mutex.
+
+Lock-free FIFO queue backed by a Vyukov-style ring with per-slot sequence counters.
 
 ## Concurrency model
 

@@ -15,11 +15,14 @@ go get github.com/maxence2997/carousel
 
 ## Types
 
-| Type | Description | Doc |
-|---|---|---|
-| `RingBuffer[T]` | Fixed-capacity FIFO circular buffer. Not safe for concurrent use. | [docs/ringbuffer.md](docs/ringbuffer.md) |
-| `RingQueue[T]` | Concurrent blocking FIFO queue backed by `RingBuffer`. Supports drop-on-full and evict-oldest-on-full strategies. | [docs/ringqueue.md](docs/ringqueue.md) |
-| `ConcurrentQueue[T]` | Lock-free MPMC FIFO queue. Multiple producers and consumers, no mutex. | [docs/concurrentqueue.md](docs/concurrentqueue.md) |
+| Type | Concurrency model | Description | Doc |
+|---|---|---|---|
+| `RingBuffer[T]` | Caller-synchronized | Fixed-capacity FIFO circular buffer. Not safe for concurrent use without external locking. | [docs/ringbuffer.md](docs/ringbuffer.md) |
+| `RingQueue[T]` | MPSC | Blocking FIFO queue backed by `RingBuffer`. N producers, 1 consumer. Supports drop-on-full and evict-oldest-on-full. | [docs/ringqueue.md](docs/ringqueue.md) |
+| `ConcurrentQueue[T]` | MPMC | Lock-free FIFO queue. N producers, M consumers, no mutex. | [docs/concurrentqueue.md](docs/concurrentqueue.md) |
+
+> **MPSC** = Multiple Producer, Single Consumer.
+> **MPMC** = Multiple Producer, Multiple Consumer.
 
 ## Quick start
 

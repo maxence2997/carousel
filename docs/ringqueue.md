@@ -1,5 +1,7 @@
 # RingQueue[T]
 
+> Concurrency: **MPSC** (Multiple Producer, Single Consumer) — N goroutines may enqueue concurrently; only one goroutine should call Pop.
+
 Concurrent blocking FIFO queue backed by [RingBuffer[T]](ringbuffer.md).
 
 ## Concurrency model
