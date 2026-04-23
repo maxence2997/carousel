@@ -5,11 +5,6 @@
 [![Go](https://img.shields.io/badge/Go-1.22+-blue.svg?logo=go)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[![RingBuffer Push](https://img.shields.io/endpoint?url=https://maxence2997.github.io/carousel/badges/ringbuffer-push.json)](https://github.com/maxence2997/carousel/actions/workflows/benchmark-badge.yml)
-[![RingBuffer Pop](https://img.shields.io/endpoint?url=https://maxence2997.github.io/carousel/badges/ringbuffer-pop.json)](https://github.com/maxence2997/carousel/actions/workflows/benchmark-badge.yml)
-[![RingQueue ForceEnqueue](https://img.shields.io/endpoint?url=https://maxence2997.github.io/carousel/badges/ringqueue-enqueue.json)](https://github.com/maxence2997/carousel/actions/workflows/benchmark-badge.yml)
-[![RingQueue ProducerConsumer](https://img.shields.io/endpoint?url=https://maxence2997.github.io/carousel/badges/ringqueue-pc.json)](https://github.com/maxence2997/carousel/actions/workflows/benchmark-badge.yml)
-
 Generic fixed-capacity ring data structures for Go.
 
 ```
@@ -88,6 +83,24 @@ Available items are always delivered before cancellation or close signals are re
 |-------|-------------|------|
 | `carousel.ErrFull` | `Enqueue` | Queue is at capacity |
 | `carousel.ErrClosed` | `Enqueue`, `ForceEnqueue`, `Pop` | Queue has been closed |
+
+## Benchmarks
+
+Measured on Apple M1 Max (`darwin/arm64`). Run `make bench` to reproduce.
+
+| Type | Operation | ns/op | B/op | allocs/op |
+|---|---|---:|---:|---:|
+| `RingBuffer` | `Push` | 3.2 | 0 | 0 |
+| `RingBuffer` | `ForcePush` | 5.7 | 0 | 0 |
+| `RingBuffer` | `Pop` | 2.9 | 0 | 0 |
+| `RingBuffer` | `Drain` (256 items) | 1 632 | 6 528 | 1 |
+| `RingQueue` | `ForceEnqueue` (serial) | 13.8 | 0 | 0 |
+| `RingQueue` | `Pop` — producer+consumer | 53 | 0 | 0 |
+| `RingQueue` | `ForceEnqueue` — ×10 parallel | 107 | 0 | 0 |
+
+`Drain` allocates one `[]T` slice to hold the returned items; all other operations are zero-allocation.
+
+Benchmark history (CI, `linux/amd64`): [maxence2997.github.io/carousel/dev/benchmark](https://maxence2997.github.io/carousel/dev/benchmark/)
 
 ## License
 

@@ -1,4 +1,4 @@
-name: Benchmark Badge
+name: Benchmark
 
 on:
   push:
@@ -21,33 +21,14 @@ jobs:
       - name: Run benchmarks
         run: go test -bench=. -benchmem -benchtime=3s -count=1 ./... | tee bench.txt
 
-      - name: Generate badge JSON files
-        run: |
-          mkdir -p badges
-
-          gen_badge() {
-            local file="$1" pattern="$2" label="$3"
-            local line msg
-            line=$(grep "^${pattern}" bench.txt | tail -1)
-            [ -z "$line" ] && return
-            msg=$(echo "$line" | awk '{printf "%s %s", $3, $4}')
-            printf '{"schemaVersion":1,"label":"%s","message":"%s","color":"brightgreen"}\n' \
-              "$label" "$msg" > "badges/${file}.json"
-          }
-
-          gen_badge "ringbuffer-push"  "BenchmarkRingBuffer_Push"            "RingBuffer · Push"
-          gen_badge "ringbuffer-pop"   "BenchmarkRingBuffer_Pop"             "RingBuffer · Pop"
-          gen_badge "ringqueue-enqueue" "BenchmarkRingQueue_ForceEnqueue"    "RingQueue · ForceEnqueue"
-          gen_badge "ringqueue-pc"     "BenchmarkRingQueue_ProducerConsumer" "RingQueue · producer+consumer"
-          gen_badge "ringqueue-par"    "BenchmarkRingQueue_Parallel"         "RingQueue · parallel ×GOMAXPROCS"
-
-      - name: Deploy badges to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Store results and detect regression
+        uses: benchmark-action/github-action-benchmark@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./badges
-          destination_dir: badges
-          keep_files: true
-          user_name: github-actions[bot]
-          user_email: github-actions[bot]@users.noreply.github.com
-          commit_message: "chore: update benchmark badges"
+          tool: go
+          output-file-path: bench.txt
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          # Fail if any benchmark is more than 50% slower than the stored baseline
+          alert-threshold: '150%'
+          fail-on-alert: true
+          comment-on-alert: false
