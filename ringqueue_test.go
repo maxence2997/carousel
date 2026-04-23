@@ -324,6 +324,45 @@ func TestRingQueue_F2_DropOldestIsAtomic(t *testing.T) {
 	}
 }
 
+// ── G: TryPop ────────────────────────────────────────────────────────────────
+
+func TestRingQueue_G1_TryPopReturnsItemWhenNonEmpty(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewRingQueue[[]byte](4)
+	defer q.Close()
+	require.NoError(t, q.Enqueue([]byte("hello")))
+	v, ok := q.TryPop()
+	assert.True(t, ok)
+	assert.Equal(t, []byte("hello"), v)
+	assert.Equal(t, 0, q.Len())
+}
+
+func TestRingQueue_G2_TryPopReturnsFalseWhenEmpty(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewRingQueue[[]byte](4)
+	defer q.Close()
+	v, ok := q.TryPop()
+	assert.False(t, ok)
+	assert.Nil(t, v)
+}
+
+func TestRingQueue_G3_TryPopDrainsRemainingAfterClose(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewRingQueue[[]byte](4)
+	require.NoError(t, q.Enqueue([]byte("a")))
+	require.NoError(t, q.Enqueue([]byte("b")))
+	q.Close()
+	v1, ok1 := q.TryPop()
+	v2, ok2 := q.TryPop()
+	v3, ok3 := q.TryPop()
+	assert.True(t, ok1)
+	assert.Equal(t, []byte("a"), v1)
+	assert.True(t, ok2)
+	assert.Equal(t, []byte("b"), v2)
+	assert.False(t, ok3)
+	assert.Nil(t, v3)
+}
+
 // ── Benchmarks ───────────────────────────────────────────────────────────────
 
 // BenchmarkRingQueue_ForceEnqueue measures single-goroutine ForceEnqueue

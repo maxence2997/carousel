@@ -109,6 +109,15 @@ func (q *RingQueue[T]) Pop(ctx context.Context) (T, error) {
 	}
 }
 
+// TryPop removes and returns the front item without blocking.
+// Returns (item, true) if an item was available, or (zero, false) if the queue is empty.
+// Safe to call after Close — remaining items are still returned until the queue is empty.
+func (q *RingQueue[T]) TryPop() (T, bool) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return q.buf.Pop()
+}
+
 // Drain removes and returns all current items in FIFO order without blocking.
 // Returns nil if the queue is empty.
 //
