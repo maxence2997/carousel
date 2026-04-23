@@ -5,6 +5,11 @@
 [![Go](https://img.shields.io/badge/Go-1.22+-blue.svg?logo=go)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+[![RingBuffer Push](https://img.shields.io/endpoint?url=https://maxence2997.github.io/carousel/badges/ringbuffer-push.json)](https://github.com/maxence2997/carousel/actions/workflows/benchmark-badge.yml)
+[![RingBuffer Pop](https://img.shields.io/endpoint?url=https://maxence2997.github.io/carousel/badges/ringbuffer-pop.json)](https://github.com/maxence2997/carousel/actions/workflows/benchmark-badge.yml)
+[![RingQueue ForceEnqueue](https://img.shields.io/endpoint?url=https://maxence2997.github.io/carousel/badges/ringqueue-enqueue.json)](https://github.com/maxence2997/carousel/actions/workflows/benchmark-badge.yml)
+[![RingQueue ProducerConsumer](https://img.shields.io/endpoint?url=https://maxence2997.github.io/carousel/badges/ringqueue-pc.json)](https://github.com/maxence2997/carousel/actions/workflows/benchmark-badge.yml)
+
 Generic fixed-capacity ring data structures for Go.
 
 ```

@@ -1,0 +1,53 @@
+name: Benchmark Badge
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Run benchmarks
+        run: go test -bench=. -benchmem -benchtime=3s -count=1 ./... | tee bench.txt
+
+      - name: Generate badge JSON files
+        run: |
+          mkdir -p badges
+
+          gen_badge() {
+            local file="$1" pattern="$2" label="$3"
+            local line msg
+            line=$(grep "^${pattern}" bench.txt | tail -1)
+            [ -z "$line" ] && return
+            msg=$(echo "$line" | awk '{printf "%s %s", $3, $4}')
+            printf '{"schemaVersion":1,"label":"%s","message":"%s","color":"brightgreen"}\n' \
+              "$label" "$msg" > "badges/${file}.json"
+          }
+
+          gen_badge "ringbuffer-push"  "BenchmarkRingBuffer_Push"            "RingBuffer · Push"
+          gen_badge "ringbuffer-pop"   "BenchmarkRingBuffer_Pop"             "RingBuffer · Pop"
+          gen_badge "ringqueue-enqueue" "BenchmarkRingQueue_ForceEnqueue"    "RingQueue · ForceEnqueue"
+          gen_badge "ringqueue-pc"     "BenchmarkRingQueue_ProducerConsumer" "RingQueue · producer+consumer"
+          gen_badge "ringqueue-par"    "BenchmarkRingQueue_Parallel"         "RingQueue · parallel ×GOMAXPROCS"
+
+      - name: Deploy badges to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./badges
+          destination_dir: badges
+          keep_files: true
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: "chore: update benchmark badges"
