@@ -15,7 +15,7 @@ xcuserdata/
 vendor/
 tmp/
 temp/
-doc/local/
+docs/local/
 *.local.*
 *.exe
 *.exe~

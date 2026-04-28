@@ -132,16 +132,16 @@ Every unresponded PR comment must be analyzed and responded to. No comment may b
 
 ## Session Protocol
 
-> Files under `doc/local/` are git-ignored and must never be committed.
+> Files under `docs/local/` are git-ignored and must never be committed.
 
 ### Start of every session -- MANDATORY
 
-1. Read `doc/local/ai-learning.md` in full. If missing, create it with the table header.
-2. Check `doc/local/plan/` for any in-progress plan and read it fully.
+1. Read `docs/local/ai-learning.md` in full. If missing, create it with the table header.
+2. Check `docs/local/plan/` for any in-progress plan and read it fully.
 
 ### During feature work
 
-Before writing production code, create or update `doc/local/plan/<feature-name>.md`:
+Before writing production code, create or update `docs/local/plan/<feature-name>.md`:
 
 1. **What** -- what are you changing or adding?
 2. **Why** -- what problem does it solve?
@@ -149,8 +149,8 @@ Before writing production code, create or update `doc/local/plan/<feature-name>.
 
 ### End of every session -- MANDATORY
 
-1. Append at least one entry to `doc/local/ai-learning.md`.
-2. Update any in-progress plan in `doc/local/plan/`.
+1. Append at least one entry to `docs/local/ai-learning.md`.
+2. Update any in-progress plan in `docs/local/plan/`.
 3. Verify `make check` passes.
 
 **Entry format:**
