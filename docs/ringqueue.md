@@ -14,25 +14,19 @@ producer goroutines ──Enqueue/ForceEnqueue──▶ [ queue ] ──Pop─�
 
 ## Quick start
 
+<!-- examplesync:ExampleRingQueue:start -->
 ```go
-q := carousel.NewRingQueue[[]byte](256)
+q := carousel.NewRingQueue[string](3)
 defer q.Close()
 
-// Producer goroutine(s)
-if err := q.Enqueue(data); err != nil {
-    // err == ErrFull or ErrClosed
-}
-_, _ = q.ForceEnqueue(data) // never returns ErrFull
+_ = q.Enqueue("alpha")
+_ = q.Enqueue("beta")
 
-// Consumer goroutine
-for {
-    item, err := q.Pop(ctx)
-    if err != nil {
-        return // ctx canceled or queue closed
-    }
-    process(item)
-}
+item, _ := q.Pop(context.Background())
+fmt.Println(item)
+fmt.Println(q.Drain())
 ```
+<!-- examplesync:ExampleRingQueue:end -->
 
 ## Methods
 
@@ -108,12 +102,16 @@ Removes and returns all current items in FIFO order without blocking. Returns `n
 
 ## Benchmarks
 
-Measured on Apple M1 Max (`darwin/arm64`). Run `make bench` to reproduce.
+Run `make bench-sync` to refresh these local numbers.
+
+<!-- benchsync:ringqueue:start -->
+Measured on `darwin/arm64` (`Apple M1 Max`).
 
 | Operation | ns/op | B/op | allocs/op |
 |---|---:|---:|---:|
-| `ForceEnqueue` (serial, no contention) | 13.8 | 0 | 0 |
-| `Pop` — 1 producer + 1 consumer goroutine | 53 | 0 | 0 |
-| `ForceEnqueue` — ×10 parallel writers | 107 | 0 | 0 |
+| `ForceEnqueue (serial, no contention)` | 13.89 | 0 | 0 |
+| `ProducerConsumer (1 producer + 1 consumer)` | 53.08 | 6 | 0 |
+| `ForceEnqueue (parallel writers)` | 108.8 | 0 | 0 |
+<!-- benchsync:ringqueue:end -->
 
-All operations are zero-allocation. The serial baseline (~14 ns) reflects uncontended mutex overhead on top of the underlying `RingBuffer` (~3 ns).
+The serial baseline (~14 ns) reflects uncontended mutex overhead on top of the underlying `RingBuffer` (~3 ns). The producer/consumer benchmark still reports `0 allocs/op`, but may show a few `B/op` from the benchmark harness.

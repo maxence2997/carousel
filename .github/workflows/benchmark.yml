@@ -21,7 +21,7 @@ jobs:
           go-version: '1.22'
 
       - name: Run benchmarks
-        run: go test -bench=. -benchmem -benchtime=3s -count=1 ./... | tee bench.txt
+        run: make bench-ci
 
       - name: Store results and detect regression
         uses: benchmark-action/github-action-benchmark@v1
