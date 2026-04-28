@@ -16,8 +16,8 @@ on:
       - '.github/instructions/**'
 
 jobs:
-  lint-test:
-    name: lint-test
+  check:
+    name: check
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -40,16 +40,3 @@ jobs:
           version: v2.11.2
       - name: test
         run: go test -v -race -count=${{ env.TEST_COUNT }} -timeout ${{ env.TEST_TIMEOUT }} ./...
-
-  check:
-    name: check
-    runs-on: ubuntu-latest
-    needs: [lint-test]
-    if: always()
-    steps:
-      - name: gate
-        run: |
-          if [[ "${{ needs.lint-test.result }}" != "success" ]]; then
-            echo "lint-test did not succeed (result: ${{ needs.lint-test.result }})"
-            exit 1
-          fi
