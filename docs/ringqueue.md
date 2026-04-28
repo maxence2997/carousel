@@ -109,9 +109,9 @@ Measured on `darwin/arm64` (`Apple M1 Max`).
 
 | Operation | ns/op | B/op | allocs/op |
 |---|---:|---:|---:|
-| `ForceEnqueue (serial, no contention)` | 13.89 | 0 | 0 |
-| `ProducerConsumer (1 producer + 1 consumer)` | 53.08 | 6 | 0 |
-| `ForceEnqueue (parallel writers)` | 108.8 | 0 | 0 |
+| `ForceEnqueue (serial, no contention)` | 13.92 | 0 | 0 |
+| `ProducerConsumer (1 producer + 1 consumer)` | 65.18 | 0 | 0 |
+| `ForceEnqueue (parallel writers)` | 109.3 | 0 | 0 |
 <!-- benchsync:ringqueue:end -->
 
 The serial baseline (~14 ns) reflects uncontended mutex overhead on top of the underlying `RingBuffer` (~3 ns). The producer/consumer benchmark still reports `0 allocs/op`, but may show a few `B/op` from the benchmark harness.

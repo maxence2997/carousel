@@ -88,10 +88,10 @@ Measured on `darwin/arm64` (`Apple M1 Max`).
 
 | Operation | ns/op | B/op | allocs/op |
 |---|---:|---:|---:|
-| `Push` | 2.979 | 0 | 0 |
-| `ForcePush` | 5.553 | 0 | 0 |
-| `Pop` | 2.893 | 0 | 0 |
-| `Drain (256 items)` | 1,495 | 6,528 | 1 |
+| `Push` | 3.07 | 0 | 0 |
+| `ForcePush` | 5.654 | 0 | 0 |
+| `Pop` | 2.878 | 0 | 0 |
+| `Drain (256 items)` | 1,467 | 6,528 | 1 |
 <!-- benchsync:ringbuffer:end -->
 
 `Drain` allocates one `[]T` slice to hold the returned items; all other operations are zero-allocation.
