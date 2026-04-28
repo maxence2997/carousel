@@ -27,12 +27,33 @@ Both types live in the root package `carousel`. Import: `github.com/maxence2997/
 ## Development Workflow
 
 ```bash
-make fmt        # gofmt + goimports
-make lint       # go vet + golangci-lint
-make test       # race-detector tests
-make check      # fmt-check + lint + test (pre-commit gate)
-make bench      # benchmarks with -benchmem
-make test-cover # coverage report → coverage.html
+make help          # list all available make targets
+make fmt           # gofmt + goimports
+make lint          # go vet + golangci-lint
+make test          # race-detector tests
+make check         # fmt-check + lint + test (pre-commit gate)
+make bench         # quick local benchmarks with -benchmem
+make bench-ci      # CI benchmark params, writes bench.txt
+make bench-sync    # rerun local benchmarks and refresh docs tables
+make examples-sync # sync examples_test.go snippets into markdown docs
+make stresslab     # run the local stress matrix
+make test-cover    # coverage report → coverage.html
+make tidy          # go mod tidy
+make deps          # go mod download + tidy
+make clean         # remove local coverage artifacts
+```
+
+### Useful One-Off Commands
+
+```bash
+go run ./cmd/stresslab -list
+# show the planned stress scenarios without running them
+
+go run ./cmd/stresslab -mode targeted -count 1 -gmp 1
+# smoke-test the targeted RingQueue stress cases locally
+
+go test -run '^$' -bench BenchmarkRingQueue_ProducerConsumer -benchmem -count=3 ./...
+# rerun the hot RingQueue producer/consumer benchmark a few times
 ```
 
 ## Conventions
@@ -87,16 +108,16 @@ Every unresponded PR comment must be analyzed and responded to. No comment may b
 
 ## Session Protocol
 
-> Files under `doc/local/` are git-ignored and must never be committed.
+> Files under `docs/local/` are git-ignored and must never be committed.
 
 ### Start of every session — MANDATORY
 
-1. Read `doc/local/ai-learning.md` in full. If missing, create it with the table header.
-2. Check `doc/local/plan/` for any in-progress plan and read it fully.
+1. Read `docs/local/ai-learning.md` in full. If missing, create it with the table header.
+2. Check `docs/local/plan/` for any in-progress plan and read it fully.
 
 ### During feature work
 
-Before writing production code, create or update `doc/local/plan/<feature-name>.md`:
+Before writing production code, create or update `docs/local/plan/<feature-name>.md`:
 
 1. **What** — what are you changing or adding?
 2. **Why** — what problem does it solve?
@@ -104,8 +125,8 @@ Before writing production code, create or update `doc/local/plan/<feature-name>.
 
 ### End of every session — MANDATORY
 
-1. Append at least one entry to `doc/local/ai-learning.md`.
-2. Update any in-progress plan in `doc/local/plan/`.
+1. Append at least one entry to `docs/local/ai-learning.md`.
+2. Update any in-progress plan in `docs/local/plan/`.
 3. Verify `make check` passes.
 
 **Entry format:**
