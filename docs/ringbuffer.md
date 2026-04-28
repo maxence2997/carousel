@@ -6,21 +6,20 @@ Fixed-capacity FIFO circular buffer backed by a pre-allocated array.
 
 ## Quick start
 
+<!-- examplesync:ExampleRingBuffer:start -->
 ```go
 buf := carousel.NewRingBuffer[int](3)
 
 buf.Push(1)
 buf.Push(2)
-buf.Push(3)          // full
+buf.Push(3)
+buf.ForcePush(4)
 
-buf.Push(4)          // returns false — buffer unchanged
-buf.ForcePush(4)     // evicts 1, buffer: [2, 3, 4]
-
-v, _ := buf.Pop()    // v=2, buffer: [3, 4]
-v, _ = buf.Peek()    // v=3, buffer unchanged
-
-items := buf.Drain() // [3, 4], buffer empty
+value, _ := buf.Pop()
+fmt.Println(value)
+fmt.Println(buf.Drain())
 ```
+<!-- examplesync:ExampleRingBuffer:end -->
 
 ## Methods
 
@@ -82,13 +81,17 @@ Maximum number of items the buffer can hold. Fixed at construction time.
 
 ## Benchmarks
 
-Measured on Apple M1 Max (`darwin/arm64`). Run `make bench` to reproduce.
+Run `make bench-sync` to refresh these local numbers.
+
+<!-- benchsync:ringbuffer:start -->
+Measured on `darwin/arm64` (`Apple M1 Max`).
 
 | Operation | ns/op | B/op | allocs/op |
 |---|---:|---:|---:|
-| `Push` | 3.2 | 0 | 0 |
-| `ForcePush` | 5.7 | 0 | 0 |
-| `Pop` | 2.9 | 0 | 0 |
-| `Drain` (256 items, ~6 ns/item) | 1,632 | 6,528 | 1 |
+| `Push` | 3.07 | 0 | 0 |
+| `ForcePush` | 5.654 | 0 | 0 |
+| `Pop` | 2.878 | 0 | 0 |
+| `Drain (256 items)` | 1,467 | 6,528 | 1 |
+<!-- benchsync:ringbuffer:end -->
 
 `Drain` allocates one `[]T` slice to hold the returned items; all other operations are zero-allocation.

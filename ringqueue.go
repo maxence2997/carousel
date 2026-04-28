@@ -78,17 +78,12 @@ func (q *RingQueue[T]) ForceEnqueue(item T) (evicted bool, err error) {
 // Concurrent calls to Pop are not supported — use a single consumer goroutine.
 // ctx must be non-nil; pass [context.Background] to opt out of cancellation.
 func (q *RingQueue[T]) Pop(ctx context.Context) (T, error) {
-	// Register context cancellation to wake the blocked cond.Wait.
-	// The callback acquires q.mu before broadcasting to prevent a lost-wakeup:
-	// if the context is canceled between the ctx.Err() check and cond.Wait(),
-	// the broadcast fires after Wait() is entered, not before.
-	stop := context.AfterFunc(ctx, func() {
-		q.mu.Lock()
-		defer q.mu.Unlock()
-		q.cond.Broadcast()
-	})
-
-	defer stop()
+	var stop func() bool
+	defer func() {
+		if stop != nil {
+			stop()
+		}
+	}()
 
 	q.mu.Lock()
 	defer q.mu.Unlock()
@@ -104,6 +99,20 @@ func (q *RingQueue[T]) Pop(ctx context.Context) (T, error) {
 		if ctx.Err() != nil {
 			var zero T
 			return zero, ctx.Err()
+		}
+
+		// Only arm the cancellation wakeup when Pop must actually sleep.
+		// This avoids paying the AfterFunc allocation cost on the fast path
+		// where an item is already available.
+		if stop == nil && ctx.Done() != nil {
+			// The callback acquires q.mu before broadcasting to prevent a
+			// lost-wakeup: if cancellation happens between the ctx.Err() check
+			// and cond.Wait(), the broadcast fires after Wait() is entered.
+			stop = context.AfterFunc(ctx, func() {
+				q.mu.Lock()
+				defer q.mu.Unlock()
+				q.cond.Broadcast()
+			})
 		}
 		q.cond.Wait()
 	}

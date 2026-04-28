@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-04-28
+
+### Added
+
+- Repo maintenance CLIs: `examplesync`, `benchsync`, and `stresslab`
+- Runnable `Example*` tests in `examples_test.go`, synced into README and package docs
+
+### Changed
+
+- Benchmark workflow now runs `make bench-ci` so CI, docs refresh, and local benchmark capture share one command path
+- Benchmark tables in `docs/` are now auto-generated from fresh local runs and include the measured platform
+
+### Fixed
+
+- `RingQueue.Pop` now registers its cancellation wakeup lazily, removing the fast-path `context.AfterFunc` overhead and bringing `BenchmarkRingQueue_ProducerConsumer` back to `0 B/op` locally
+
 ## [1.0.2] - 2026-04-23
 
 ### Added
@@ -44,7 +60,8 @@
 - `ErrFull` — returned by `Enqueue` when the queue is at capacity
 - `ErrClosed` — returned by `Enqueue`, `ForceEnqueue`, and `Pop` after `Close` is called
 
-[Unreleased]: https://github.com/maxence2997/carousel/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/maxence2997/carousel/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/maxence2997/carousel/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/maxence2997/carousel/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/maxence2997/carousel/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/maxence2997/carousel/compare/v0.1.0...v1.0.0

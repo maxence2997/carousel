@@ -3,6 +3,7 @@ package carousel_test
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -11,6 +12,32 @@ import (
 
 	"github.com/maxence2997/carousel"
 )
+
+type afterFuncTrackingContext struct {
+	base  context.Context
+	calls atomic.Int32
+}
+
+func (c *afterFuncTrackingContext) Deadline() (time.Time, bool) {
+	return c.base.Deadline()
+}
+
+func (c *afterFuncTrackingContext) Done() <-chan struct{} {
+	return c.base.Done()
+}
+
+func (c *afterFuncTrackingContext) Err() error {
+	return c.base.Err()
+}
+
+func (c *afterFuncTrackingContext) Value(any) any {
+	return nil
+}
+
+func (c *afterFuncTrackingContext) AfterFunc(func()) func() bool {
+	c.calls.Add(1)
+	return func() bool { return true }
+}
 
 // ── A: Enqueue ───────────────────────────────────────────────────────────────
 
@@ -85,6 +112,22 @@ func TestRingQueue_C1_PopReturnsItem(t *testing.T) {
 	data, err := q.Pop(context.Background())
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("hello"), data)
+}
+
+func TestRingQueue_C1b_PopFastPathSkipsAfterFunc(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewRingQueue[[]byte](4)
+	defer q.Close()
+	require.NoError(t, q.Enqueue([]byte("hello")))
+
+	baseCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ctx := &afterFuncTrackingContext{base: baseCtx}
+	data, err := q.Pop(ctx)
+
+	assert.NoError(t, err)
+	assert.Equal(t, []byte("hello"), data)
+	assert.Zero(t, ctx.calls.Load(), "Pop should not register cancellation wakeups when data is already available")
 }
 
 func TestRingQueue_C2_PopBlocksUntilEnqueue(t *testing.T) {

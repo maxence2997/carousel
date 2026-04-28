@@ -24,40 +24,48 @@ go get github.com/maxence2997/carousel
 
 ### RingBuffer
 
+<!-- examplesync:ExampleRingBuffer:start -->
 ```go
 buf := carousel.NewRingBuffer[int](3)
 
-buf.Push(1); buf.Push(2); buf.Push(3) // full
-buf.Push(4)                            // false — buffer unchanged
-buf.ForcePush(4)                       // evicts 1, buffer: [2, 3, 4]
+buf.Push(1)
+buf.Push(2)
+buf.Push(3)
+buf.ForcePush(4)
 
-v, _ := buf.Pop()    // v=2
-items := buf.Drain() // [3, 4]
+value, _ := buf.Pop()
+fmt.Println(value)
+fmt.Println(buf.Drain())
 ```
+<!-- examplesync:ExampleRingBuffer:end -->
 
 ### RingQueue
 
+<!-- examplesync:ExampleRingQueue:start -->
 ```go
-q := carousel.NewRingQueue[[]byte](256)
+q := carousel.NewRingQueue[string](3)
 defer q.Close()
 
-// producer goroutine(s)
-q.Enqueue(data)      // ErrFull if at capacity
-q.ForceEnqueue(data) // evicts oldest if full, never ErrFull
+_ = q.Enqueue("alpha")
+_ = q.Enqueue("beta")
 
-// consumer goroutine
-for {
-    item, err := q.Pop(ctx)
-    if err != nil { return }
-    process(item)
-}
+item, _ := q.Pop(context.Background())
+fmt.Println(item)
+fmt.Println(q.Drain())
 ```
+<!-- examplesync:ExampleRingQueue:end -->
 
 ## Benchmarks
 
 See per-type results in [docs/ringbuffer.md](docs/ringbuffer.md#benchmarks) and [docs/ringqueue.md](docs/ringqueue.md#benchmarks).
 
 Benchmark history (CI, `linux/amd64`): [benchmarks](https://maxence2997.github.io/carousel/benchmarks/)
+
+## Tooling
+
+- `make examples-sync` refreshes runnable examples in the README and package docs from [examples_test.go](examples_test.go).
+- `make bench-sync` reruns local benchmarks and rewrites the benchmark tables in [docs/](docs/).
+- `make stresslab` runs the local race/stress matrix for the queue regression tests.
 
 ## License
 
