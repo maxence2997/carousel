@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-04-28
+
+### Changed
+
+- `RingBuffer.Drain` and `Clear` now use bulk `copy`/`clear` paths for wrapped segments, reducing local `Drain` CPU cost without changing allocation behavior
+
 ## [1.0.3] - 2026-04-28
 
 ### Added
@@ -60,7 +66,8 @@
 - `ErrFull` — returned by `Enqueue` when the queue is at capacity
 - `ErrClosed` — returned by `Enqueue`, `ForceEnqueue`, and `Pop` after `Close` is called
 
-[Unreleased]: https://github.com/maxence2997/carousel/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/maxence2997/carousel/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/maxence2997/carousel/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/maxence2997/carousel/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/maxence2997/carousel/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/maxence2997/carousel/compare/v1.0.0...v1.0.1

@@ -87,11 +87,15 @@ func (rb *RingBuffer[T]) Drain() []T {
 		return nil
 	}
 	out := make([]T, rb.size)
-	var zero T
-	for i := range out {
-		idx := (rb.head + i) % len(rb.data)
-		out[i] = rb.data[idx]
-		rb.data[idx] = zero // release reference for GC
+	end := rb.head + rb.size
+	if end <= len(rb.data) {
+		copy(out, rb.data[rb.head:end])
+		clear(rb.data[rb.head:end]) // release references for GC
+	} else {
+		n := copy(out, rb.data[rb.head:])
+		copy(out[n:], rb.data[:end-len(rb.data)])
+		clear(rb.data[rb.head:])          // release references for GC
+		clear(rb.data[:end-len(rb.data)]) // release references for GC
 	}
 	rb.head = 0
 	rb.size = 0
@@ -110,9 +114,15 @@ func (rb *RingBuffer[T]) Cap() int {
 
 // Clear removes all items and releases slot references for GC.
 func (rb *RingBuffer[T]) Clear() {
-	var zero T
-	for i := range rb.size {
-		rb.data[(rb.head+i)%len(rb.data)] = zero
+	if rb.size == 0 {
+		return
+	}
+	end := rb.head + rb.size
+	if end <= len(rb.data) {
+		clear(rb.data[rb.head:end])
+	} else {
+		clear(rb.data[rb.head:])
+		clear(rb.data[:end-len(rb.data)])
 	}
 	rb.head = 0
 	rb.size = 0
