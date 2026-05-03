@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777388423746,
+  "lastUpdate": 1777809039107,
   "repoUrl": "https://github.com/maxence2997/carousel",
   "entries": {
     "Benchmark": [
@@ -1536,6 +1536,198 @@ window.BENCHMARK_DATA = {
             "value": 0,
             "unit": "allocs/op",
             "extra": "99638588 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "72722415+maxence2997@users.noreply.github.com",
+            "name": "Maxence Yang",
+            "username": "maxence2997"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "996e394c1f4710a57cbb9e51b6e7d1e50a44a7e8",
+          "message": "Merge pull request #8 from maxence2997/fix/bench-makefile-failures\n\nfix: propagate failures in bench-ci and bench-sync",
+          "timestamp": "2026-05-03T19:49:51+08:00",
+          "tree_id": "0442c2c4c5e7a8d76bc01a60e905388c0bd4bd4d",
+          "url": "https://github.com/maxence2997/carousel/commit/996e394c1f4710a57cbb9e51b6e7d1e50a44a7e8"
+        },
+        "date": 1777809038599,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkRingBuffer_Push",
+            "value": 3.169,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Push - ns/op",
+            "value": 3.169,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Push - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Push - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_ForcePush",
+            "value": 4.216,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "852045124 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_ForcePush - ns/op",
+            "value": 4.216,
+            "unit": "ns/op",
+            "extra": "852045124 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_ForcePush - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "852045124 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_ForcePush - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "852045124 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Pop",
+            "value": 3.171,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Pop - ns/op",
+            "value": 3.171,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Pop - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Pop - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Drain",
+            "value": 2415,
+            "unit": "ns/op\t    6528 B/op\t       1 allocs/op",
+            "extra": "1498431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Drain - ns/op",
+            "value": 2415,
+            "unit": "ns/op",
+            "extra": "1498431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Drain - B/op",
+            "value": 6528,
+            "unit": "B/op",
+            "extra": "1498431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBuffer_Drain - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "1498431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_ForceEnqueue",
+            "value": 11.16,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "322424636 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_ForceEnqueue - ns/op",
+            "value": 11.16,
+            "unit": "ns/op",
+            "extra": "322424636 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_ForceEnqueue - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "322424636 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_ForceEnqueue - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "322424636 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_ProducerConsumer",
+            "value": 19.76,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "183313878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_ProducerConsumer - ns/op",
+            "value": 19.76,
+            "unit": "ns/op",
+            "extra": "183313878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_ProducerConsumer - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "183313878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_ProducerConsumer - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "183313878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_Parallel",
+            "value": 35.73,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "99431906 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_Parallel - ns/op",
+            "value": 35.73,
+            "unit": "ns/op",
+            "extra": "99431906 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_Parallel - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "99431906 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingQueue_Parallel - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "99431906 times\n4 procs"
           }
         ]
       }
