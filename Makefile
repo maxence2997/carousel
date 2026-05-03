@@ -1,5 +1,9 @@
 .PHONY: help test test-cover bench bench-ci lint fmt check tidy deps clean examples-sync bench-sync stresslab
 
+# bench-ci and bench-sync use bash for `set -o pipefail` and `trap`; all
+# other recipes stay POSIX-compatible so they run in any /bin/sh.
+bench-ci bench-sync: SHELL := bash
+
 # Default target
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -17,17 +21,22 @@ bench: ## Run benchmarks with memory allocation stats
 	@go test -bench=. -benchmem -run=^$$ ./...
 
 bench-ci: ## Run the CI benchmark suite and write results to BENCH_OUT or bench.txt
-	@outfile="$${BENCH_OUT:-bench.txt}"; \
+	@set -o pipefail; \
+		outfile="$${BENCH_OUT:-bench.txt}"; \
 		go test -bench=. -benchmem -benchtime=3s -count=1 -run=^$$ ./... | tee "$$outfile"
 
 examples-sync: ## Refresh markdown examples from examples_test.go
 	@go run ./cmd/examplesync
 
 bench-sync: ## Refresh benchmark tables in docs from a fresh local benchmark run
-	@tmpfile="$$(mktemp)"; \
-		$(MAKE) --no-print-directory bench-ci BENCH_OUT="$$tmpfile" > /dev/null; \
+	@echo "── running benchmarks ──"
+	@set -e; \
+		tmpfile="$$(mktemp)"; \
+		trap 'rm -f "$$tmpfile"' EXIT; \
+		$(MAKE) --no-print-directory bench-ci BENCH_OUT="$$tmpfile"; \
+		echo "── refreshing docs ──"; \
 		go run ./cmd/benchsync -input "$$tmpfile"; \
-		rm -f "$$tmpfile"
+		echo "── done ──"
 
 stresslab: ## Run the local race/stress matrix
 	@go run ./cmd/stresslab
