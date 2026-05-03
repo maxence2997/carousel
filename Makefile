@@ -29,11 +29,14 @@ examples-sync: ## Refresh markdown examples from examples_test.go
 	@go run ./cmd/examplesync
 
 bench-sync: ## Refresh benchmark tables in docs from a fresh local benchmark run
+	@echo "── running benchmarks ──"
 	@set -e; \
 		tmpfile="$$(mktemp)"; \
 		trap 'rm -f "$$tmpfile"' EXIT; \
-		$(MAKE) --no-print-directory bench-ci BENCH_OUT="$$tmpfile" > /dev/null; \
-		go run ./cmd/benchsync -input "$$tmpfile"
+		$(MAKE) --no-print-directory bench-ci BENCH_OUT="$$tmpfile"; \
+		echo "── refreshing docs ──"; \
+		go run ./cmd/benchsync -input "$$tmpfile"; \
+		echo "── done ──"
 
 stresslab: ## Run the local race/stress matrix
 	@go run ./cmd/stresslab
