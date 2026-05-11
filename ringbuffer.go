@@ -104,6 +104,9 @@ func (rb *RingBuffer[T]) Drain() []T {
 //
 // The returned slice is independent of the buffer; mutations to either do
 // not affect the other. Non-destructive: buffer state is unchanged.
+//
+// Independence is shallow: if T is a pointer type or contains pointers,
+// the pointed-to values are shared between the snapshot and the buffer.
 func (rb *RingBuffer[T]) Snapshot() []T {
 	if rb.size == 0 {
 		return nil
