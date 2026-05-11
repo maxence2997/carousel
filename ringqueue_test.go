@@ -367,6 +367,102 @@ func TestRingQueue_F2_DropOldestIsAtomic(t *testing.T) {
 	}
 }
 
+// ── G: Snapshot ──────────────────────────────────────────────────────────────
+
+func TestRingQueue_G1_SnapshotReturnsNilWhenEmpty(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewRingQueue[int](4)
+	defer q.Close()
+	assert.Nil(t, q.Snapshot())
+}
+
+func TestRingQueue_G2_SnapshotReturnsFIFOOrder(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewRingQueue[int](4)
+	defer q.Close()
+	require.NoError(t, q.Enqueue(1))
+	require.NoError(t, q.Enqueue(2))
+	require.NoError(t, q.Enqueue(3))
+	assert.Equal(t, []int{1, 2, 3}, q.Snapshot())
+}
+
+func TestRingQueue_G3_SnapshotDoesNotMutateQueue(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewRingQueue[int](4)
+	defer q.Close()
+	require.NoError(t, q.Enqueue(10))
+	require.NoError(t, q.Enqueue(20))
+
+	first := q.Snapshot()
+	second := q.Snapshot()
+	assert.Equal(t, 2, q.Len())
+	assert.Equal(t, first, second)
+
+	// Subsequent Pop still drains in FIFO order — Snapshot did not consume.
+	data, err := q.Pop(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 10, data)
+}
+
+func TestRingQueue_G4_ConcurrentEnqueueAndSnapshot(t *testing.T) {
+	t.Parallel()
+	const bufSize = 8
+	const enqueues = 500
+	q := carousel.NewRingQueue[int](bufSize)
+	defer q.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Consumer keeps the buffer flowing so ForceEnqueue evictions stay rare.
+	consumeDone := make(chan struct{})
+	go func() {
+		defer close(consumeDone)
+		for {
+			if _, err := q.Pop(ctx); err != nil {
+				return
+			}
+		}
+	}()
+
+	// Producer enqueues a monotonically increasing sequence.
+	producerDone := make(chan struct{})
+	go func() {
+		defer close(producerDone)
+		for i := range enqueues {
+			q.ForceEnqueue(i) //nolint:errcheck
+		}
+	}()
+
+	samples := 0
+	for {
+		select {
+		case <-producerDone:
+			cancel()
+			<-consumeDone
+			assert.Greater(t, samples, 0, "sampler should have observed at least one snapshot")
+			return
+		default:
+			snap := q.Snapshot()
+			for i := 1; i < len(snap); i++ {
+				require.Less(t, snap[i-1], snap[i],
+					"snapshot must preserve monotonic FIFO order")
+			}
+			samples++
+		}
+	}
+}
+
+func TestRingQueue_G5_SnapshotAfterCloseStillReturnsItems(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewRingQueue[int](4)
+	require.NoError(t, q.Enqueue(1))
+	require.NoError(t, q.Enqueue(2))
+	q.Close()
+	assert.Equal(t, []int{1, 2}, q.Snapshot())
+	assert.Equal(t, 2, q.Len())
+}
+
 // ── Benchmarks ───────────────────────────────────────────────────────────────
 
 // BenchmarkRingQueue_ForceEnqueue measures single-goroutine ForceEnqueue
