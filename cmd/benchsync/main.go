@@ -106,6 +106,8 @@ func defaultTargets(root string) []benchTarget {
 				{Name: "BenchmarkRingBuffer_ForcePush", Label: "ForcePush"},
 				{Name: "BenchmarkRingBuffer_Pop", Label: "Pop"},
 				{Name: "BenchmarkRingBuffer_Drain", Label: "Drain (256 items)"},
+				{Name: "BenchmarkRingBuffer_Snapshot", Label: "Snapshot (256 items)"},
+				{Name: "BenchmarkRingBuffer_Snapshot_Wrap", Label: "Snapshot (256 items, wrap)"},
 			},
 		},
 		{
@@ -115,6 +117,7 @@ func defaultTargets(root string) []benchTarget {
 				{Name: "BenchmarkRingQueue_ForceEnqueue", Label: "ForceEnqueue (serial, no contention)"},
 				{Name: "BenchmarkRingQueue_ProducerConsumer", Label: "ProducerConsumer (1 producer + 1 consumer)"},
 				{Name: "BenchmarkRingQueue_Parallel", Label: "ForceEnqueue (parallel writers)"},
+				{Name: "BenchmarkRingQueue_Snapshot", Label: "Snapshot (256 items)"},
 			},
 		},
 	}

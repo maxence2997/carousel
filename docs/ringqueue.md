@@ -98,6 +98,10 @@ Maximum number of items the queue can hold. Fixed at construction time.
 
 Removes and returns all current items in FIFO order without blocking. Returns `nil` if the queue is empty. Useful for flushing remaining items after `Close`.
 
+**`Snapshot() []T`**
+
+Returns a copy of all current items in FIFO order without removing them. Returns `nil` if the queue is empty. Non-destructive: queue state is unchanged. Holds the queue mutex for the duration of the in-package copy (no user code runs under the lock); lock hold time is O(N) where N = `Len()` at the moment of the call. Independence of the returned slice is shallow — see `RingBuffer.Snapshot` for details.
+
 ---
 
 ## Benchmarks
@@ -109,9 +113,10 @@ Measured on `darwin/arm64` (`Apple M1 Max`).
 
 | Operation | ns/op | B/op | allocs/op |
 |---|---:|---:|---:|
-| `ForceEnqueue (serial, no contention)` | 13.76 | 0 | 0 |
-| `ProducerConsumer (1 producer + 1 consumer)` | 71.02 | 0 | 0 |
-| `ForceEnqueue (parallel writers)` | 109.7 | 0 | 0 |
+| `ForceEnqueue (serial, no contention)` | 13.91 | 0 | 0 |
+| `ProducerConsumer (1 producer + 1 consumer)` | 67.29 | 0 | 0 |
+| `ForceEnqueue (parallel writers)` | 109.4 | 0 | 0 |
+| `Snapshot (256 items)` | 680.9 | 6,528 | 1 |
 <!-- benchsync:ringqueue:end -->
 
 The serial baseline (~14 ns) reflects uncontended mutex overhead on top of the underlying `RingBuffer` (~3 ns). The producer/consumer benchmark still reports `0 allocs/op`, but may show a few `B/op` from the benchmark harness.

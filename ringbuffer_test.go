@@ -284,6 +284,78 @@ func TestLenCap_H2_CapIsConstant(t *testing.T) {
 	assert.Equal(t, 7, rb.Cap())
 }
 
+// ── I: Snapshot ──────────────────────────────────────────────────────────────
+
+func TestSnapshot_I1_ReturnsNilOnEmpty(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	assert.Nil(t, rb.Snapshot())
+}
+
+func TestSnapshot_I2_FIFOOrderNonWrapping(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	rb.Push(1)
+	rb.Push(2)
+	rb.Push(3)
+	assert.Equal(t, []int{1, 2, 3}, rb.Snapshot())
+}
+
+func TestSnapshot_I3_FIFOOrderWrapAround(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](3)
+	rb.Push(1)
+	rb.Push(2)
+	rb.Push(3)
+	rb.Pop()   // head advances to index 1
+	rb.Push(4) // wraps to index 0
+	assert.Equal(t, []int{2, 3, 4}, rb.Snapshot())
+}
+
+func TestSnapshot_I4_DoesNotMutateBuffer(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	rb.Push(10)
+	rb.Push(20)
+	first := rb.Snapshot()
+	second := rb.Snapshot()
+	assert.Equal(t, 2, rb.Len())
+	assert.Equal(t, first, second)
+}
+
+func TestSnapshot_I5_CallerMutationIsolated(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	rb.Push(1)
+	rb.Push(2)
+	snap := rb.Snapshot()
+	snap[0] = 999
+	again := rb.Snapshot()
+	assert.Equal(t, []int{1, 2}, again)
+}
+
+func TestSnapshot_I6_BufferMutationIsolated(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	rb.Push(1)
+	rb.Push(2)
+	snap := rb.Snapshot()
+	rb.Push(3)
+	rb.Pop()
+	rb.Clear()
+	assert.Equal(t, []int{1, 2}, snap)
+}
+
+func TestSnapshot_I7_FullCapacityRoundTrip(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	for i := 1; i <= 4; i++ {
+		rb.Push(i)
+	}
+	assert.Equal(t, []int{1, 2, 3, 4}, rb.Snapshot())
+	assert.Equal(t, 4, rb.Len()) // still full
+}
+
 // ── Benchmarks ───────────────────────────────────────────────────────────────
 
 func BenchmarkRingBuffer_Push(b *testing.B) {
@@ -332,5 +404,42 @@ func BenchmarkRingBuffer_Drain(b *testing.B) {
 			rb.ForcePush(data)
 		}
 		rb.Drain()
+	}
+}
+
+// BenchmarkRingBuffer_Snapshot measures a non-destructive copy of a full,
+// non-wrapping buffer. Expected: 1 alloc/op (the returned slice).
+func BenchmarkRingBuffer_Snapshot(b *testing.B) {
+	rb := carousel.NewRingBuffer[[]byte](256)
+	data := make([]byte, 64)
+	for range 256 {
+		rb.ForcePush(data)
+	}
+	b.ResetTimer()
+	for range b.N {
+		_ = rb.Snapshot()
+	}
+}
+
+// BenchmarkRingBuffer_Snapshot_Wrap measures the wrap-path: head > 0 so the
+// live region splits into two segments. Confirms the wrap branch still goes
+// through bulk copy (one or two `copy` calls) rather than a per-element loop.
+func BenchmarkRingBuffer_Snapshot_Wrap(b *testing.B) {
+	const bufCap = 256
+	rb := carousel.NewRingBuffer[[]byte](bufCap)
+	data := make([]byte, 64)
+	for range bufCap {
+		rb.ForcePush(data)
+	}
+	for range bufCap / 2 {
+		rb.Pop()
+	}
+	for range bufCap / 2 {
+		rb.ForcePush(data)
+	}
+	// Now head = bufCap/2, size = bufCap, live region wraps.
+	b.ResetTimer()
+	for range b.N {
+		_ = rb.Snapshot()
 	}
 }

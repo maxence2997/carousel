@@ -65,6 +65,10 @@ Removes and returns all items in FIFO order. Returns `nil` if the buffer is empt
 
 Removes all items and zeros all internal slots. Equivalent to `Drain` but discards the items.
 
+**`Snapshot() []T`**
+
+Returns a copy of all items in FIFO order without removing them. Returns `nil` if the buffer is empty. The returned slice is independent of the buffer; mutations to either do not affect the other. Independence is shallow: if `T` is a pointer type or contains pointers, the pointed-to values are shared between the snapshot and the buffer.
+
 ---
 
 ### Capacity
@@ -88,10 +92,12 @@ Measured on `darwin/arm64` (`Apple M1 Max`).
 
 | Operation | ns/op | B/op | allocs/op |
 |---|---:|---:|---:|
-| `Push` | 2.879 | 0 | 0 |
-| `ForcePush` | 5.396 | 0 | 0 |
-| `Pop` | 2.87 | 0 | 0 |
-| `Drain (256 items)` | 1,285 | 6,528 | 1 |
+| `Push` | 2.914 | 0 | 0 |
+| `ForcePush` | 5.459 | 0 | 0 |
+| `Pop` | 2.901 | 0 | 0 |
+| `Drain (256 items)` | 1,287 | 6,528 | 1 |
+| `Snapshot (256 items)` | 673.3 | 6,528 | 1 |
+| `Snapshot (256 items, wrap)` | 599.1 | 6,528 | 1 |
 <!-- benchsync:ringbuffer:end -->
 
-`Drain` allocates one `[]T` slice to hold the returned items; all other operations are zero-allocation.
+`Drain` and `Snapshot` each allocate one `[]T` slice to hold the returned items; all other operations are zero-allocation. `Snapshot`'s wrap variant matches the non-wrap variant within noise — both go through bulk `copy`, never a per-element loop.

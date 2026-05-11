@@ -131,6 +131,22 @@ func (q *RingQueue[T]) Drain() []T {
 	return q.buf.Drain()
 }
 
+// Snapshot returns a copy of all current items in FIFO order without removing
+// them. Returns nil if the queue is empty.
+//
+// Acquires the queue lock for the duration of the in-package copy; no
+// user-supplied code runs under the lock. Non-destructive: queue state is
+// unchanged after the call.
+//
+// Lock hold time is O(N) where N = [RingQueue.Len] at the moment of the
+// call. For very large capacities under contention, prefer a steady-state
+// design that does not call Snapshot from a hot path.
+func (q *RingQueue[T]) Snapshot() []T {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return q.buf.Snapshot()
+}
+
 // Len returns the number of items currently in the queue.
 func (q *RingQueue[T]) Len() int {
 	q.mu.Lock()

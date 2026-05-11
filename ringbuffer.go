@@ -86,19 +86,35 @@ func (rb *RingBuffer[T]) Drain() []T {
 	if rb.size == 0 {
 		return nil
 	}
-	out := make([]T, rb.size)
-	end := rb.head + rb.size
-	if end <= len(rb.data) {
-		copy(out, rb.data[rb.head:end])
-		clear(rb.data[rb.head:end]) // release references for GC
-	} else {
-		n := copy(out, rb.data[rb.head:])
-		copy(out[n:], rb.data[:end-len(rb.data)])
-		clear(rb.data[rb.head:])          // release references for GC
-		clear(rb.data[:end-len(rb.data)]) // release references for GC
-	}
+	h, t := rb.segments()
+	out := make([]T, len(h)+len(t))
+	// Process each segment fully (copy then clear) before moving to the next
+	// so the cachelines touched by copy stay hot for the immediate clear.
+	n := copy(out, h)
+	clear(h) // release references for GC
+	copy(out[n:], t)
+	clear(t) // release references for GC; no-op when t is nil
 	rb.head = 0
 	rb.size = 0
+	return out
+}
+
+// Snapshot returns a copy of all items in FIFO order (oldest first).
+// Returns nil if the buffer is empty.
+//
+// The returned slice is independent of the buffer; mutations to either do
+// not affect the other. Non-destructive: buffer state is unchanged.
+//
+// Independence is shallow: if T is a pointer type or contains pointers,
+// the pointed-to values are shared between the snapshot and the buffer.
+func (rb *RingBuffer[T]) Snapshot() []T {
+	if rb.size == 0 {
+		return nil
+	}
+	h, t := rb.segments()
+	out := make([]T, len(h)+len(t))
+	n := copy(out, h)
+	copy(out[n:], t)
 	return out
 }
 
@@ -113,17 +129,29 @@ func (rb *RingBuffer[T]) Cap() int {
 }
 
 // Clear removes all items and releases slot references for GC.
+// No-op when the buffer is already empty.
 func (rb *RingBuffer[T]) Clear() {
 	if rb.size == 0 {
 		return
 	}
-	end := rb.head + rb.size
-	if end <= len(rb.data) {
-		clear(rb.data[rb.head:end])
-	} else {
-		clear(rb.data[rb.head:])
-		clear(rb.data[:end-len(rb.data)])
-	}
+	h, t := rb.segments()
+	clear(h)
+	clear(t) // no-op when t is nil
 	rb.head = 0
 	rb.size = 0
+}
+
+// segments returns the live region as one or two contiguous slice views over
+// rb.data. tail is nil when the region does not wrap past the physical array
+// end. Both slices alias rb.data; callers must not retain them past the next
+// mutation of the buffer.
+func (rb *RingBuffer[T]) segments() (head, tail []T) {
+	if rb.size == 0 {
+		return nil, nil
+	}
+	end := rb.head + rb.size
+	if end <= len(rb.data) {
+		return rb.data[rb.head:end], nil
+	}
+	return rb.data[rb.head:], rb.data[:end-len(rb.data)]
 }
