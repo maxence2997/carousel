@@ -406,3 +406,40 @@ func BenchmarkRingBuffer_Drain(b *testing.B) {
 		rb.Drain()
 	}
 }
+
+// BenchmarkRingBuffer_Snapshot measures a non-destructive copy of a full,
+// non-wrapping buffer. Expected: 1 alloc/op (the returned slice).
+func BenchmarkRingBuffer_Snapshot(b *testing.B) {
+	rb := carousel.NewRingBuffer[[]byte](256)
+	data := make([]byte, 64)
+	for range 256 {
+		rb.ForcePush(data)
+	}
+	b.ResetTimer()
+	for range b.N {
+		_ = rb.Snapshot()
+	}
+}
+
+// BenchmarkRingBuffer_Snapshot_Wrap measures the wrap-path: head > 0 so the
+// live region splits into two segments. Confirms the wrap branch still goes
+// through bulk copy (one or two `copy` calls) rather than a per-element loop.
+func BenchmarkRingBuffer_Snapshot_Wrap(b *testing.B) {
+	const cap = 256
+	rb := carousel.NewRingBuffer[[]byte](cap)
+	data := make([]byte, 64)
+	for range cap {
+		rb.ForcePush(data)
+	}
+	for range cap / 2 {
+		rb.Pop()
+	}
+	for range cap / 2 {
+		rb.ForcePush(data)
+	}
+	// Now head = cap/2, size = cap, live region wraps.
+	b.ResetTimer()
+	for range b.N {
+		_ = rb.Snapshot()
+	}
+}

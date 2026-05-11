@@ -518,3 +518,18 @@ func BenchmarkRingQueue_Parallel(b *testing.B) {
 		}
 	})
 }
+
+// BenchmarkRingQueue_Snapshot measures a non-destructive copy of a full queue.
+// Cost relative to BenchmarkRingBuffer_Snapshot is the mu.Lock/Unlock overhead.
+func BenchmarkRingQueue_Snapshot(b *testing.B) {
+	q := carousel.NewRingQueue[[]byte](256)
+	defer q.Close()
+	data := make([]byte, 64)
+	for range 256 {
+		q.ForceEnqueue(data) //nolint:errcheck
+	}
+	b.ResetTimer()
+	for range b.N {
+		_ = q.Snapshot()
+	}
+}
