@@ -425,19 +425,19 @@ func BenchmarkRingBuffer_Snapshot(b *testing.B) {
 // live region splits into two segments. Confirms the wrap branch still goes
 // through bulk copy (one or two `copy` calls) rather than a per-element loop.
 func BenchmarkRingBuffer_Snapshot_Wrap(b *testing.B) {
-	const cap = 256
-	rb := carousel.NewRingBuffer[[]byte](cap)
+	const bufCap = 256
+	rb := carousel.NewRingBuffer[[]byte](bufCap)
 	data := make([]byte, 64)
-	for range cap {
+	for range bufCap {
 		rb.ForcePush(data)
 	}
-	for range cap / 2 {
+	for range bufCap / 2 {
 		rb.Pop()
 	}
-	for range cap / 2 {
+	for range bufCap / 2 {
 		rb.ForcePush(data)
 	}
-	// Now head = cap/2, size = cap, live region wraps.
+	// Now head = bufCap/2, size = bufCap, live region wraps.
 	b.ResetTimer()
 	for range b.N {
 		_ = rb.Snapshot()
