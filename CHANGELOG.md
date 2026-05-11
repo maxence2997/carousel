@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- `RingBuffer.Snapshot()` and `RingQueue.Snapshot()` — non-destructive FIFO copy. Returns `nil` when empty. Tracking: [#9](https://github.com/maxence2997/carousel/issues/9)
+
 ## [1.0.4] - 2026-04-28
 
 ### Changed
