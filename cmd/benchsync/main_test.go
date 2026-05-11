@@ -57,9 +57,12 @@ BenchmarkRingBuffer_Push-12              1000000      3.2 ns/op      0 B/op    0
 BenchmarkRingBuffer_ForcePush-12         1000000      5.7 ns/op      0 B/op    0 allocs/op
 BenchmarkRingBuffer_Pop-12               1000000      2.9 ns/op      0 B/op    0 allocs/op
 BenchmarkRingBuffer_Drain-12             1000000     1632 ns/op   6528 B/op    1 allocs/op
+BenchmarkRingBuffer_Snapshot-12          1000000      640 ns/op   6528 B/op    1 allocs/op
+BenchmarkRingBuffer_Snapshot_Wrap-12     1000000      610 ns/op   6528 B/op    1 allocs/op
 BenchmarkRingQueue_ForceEnqueue-12       1000000     13.8 ns/op      0 B/op    0 allocs/op
 BenchmarkRingQueue_ProducerConsumer-12   1000000       53 ns/op      0 B/op    0 allocs/op
 BenchmarkRingQueue_Parallel-12           1000000      107 ns/op      0 B/op    0 allocs/op
+BenchmarkRingQueue_Snapshot-12           1000000      688 ns/op   6528 B/op    1 allocs/op
 `), 0o644)
 	require.NoError(t, err)
 
