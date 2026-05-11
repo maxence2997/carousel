@@ -284,6 +284,78 @@ func TestLenCap_H2_CapIsConstant(t *testing.T) {
 	assert.Equal(t, 7, rb.Cap())
 }
 
+// ── I: Snapshot ──────────────────────────────────────────────────────────────
+
+func TestSnapshot_I1_ReturnsNilOnEmpty(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	assert.Nil(t, rb.Snapshot())
+}
+
+func TestSnapshot_I2_FIFOOrderNonWrapping(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	rb.Push(1)
+	rb.Push(2)
+	rb.Push(3)
+	assert.Equal(t, []int{1, 2, 3}, rb.Snapshot())
+}
+
+func TestSnapshot_I3_FIFOOrderWrapAround(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](3)
+	rb.Push(1)
+	rb.Push(2)
+	rb.Push(3)
+	rb.Pop()   // head advances to index 1
+	rb.Push(4) // wraps to index 0
+	assert.Equal(t, []int{2, 3, 4}, rb.Snapshot())
+}
+
+func TestSnapshot_I4_DoesNotMutateBuffer(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	rb.Push(10)
+	rb.Push(20)
+	first := rb.Snapshot()
+	second := rb.Snapshot()
+	assert.Equal(t, 2, rb.Len())
+	assert.Equal(t, first, second)
+}
+
+func TestSnapshot_I5_CallerMutationIsolated(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	rb.Push(1)
+	rb.Push(2)
+	snap := rb.Snapshot()
+	snap[0] = 999
+	again := rb.Snapshot()
+	assert.Equal(t, []int{1, 2}, again)
+}
+
+func TestSnapshot_I6_BufferMutationIsolated(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	rb.Push(1)
+	rb.Push(2)
+	snap := rb.Snapshot()
+	rb.Push(3)
+	rb.Pop()
+	rb.Clear()
+	assert.Equal(t, []int{1, 2}, snap)
+}
+
+func TestSnapshot_I7_FullCapacityRoundTrip(t *testing.T) {
+	t.Parallel()
+	rb := carousel.NewRingBuffer[int](4)
+	for i := 1; i <= 4; i++ {
+		rb.Push(i)
+	}
+	assert.Equal(t, []int{1, 2, 3, 4}, rb.Snapshot())
+	assert.Equal(t, 4, rb.Len()) // still full
+}
+
 // ── Benchmarks ───────────────────────────────────────────────────────────────
 
 func BenchmarkRingBuffer_Push(b *testing.B) {

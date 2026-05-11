@@ -99,6 +99,22 @@ func (rb *RingBuffer[T]) Drain() []T {
 	return out
 }
 
+// Snapshot returns a copy of all items in FIFO order (oldest first).
+// Returns nil if the buffer is empty.
+//
+// The returned slice is independent of the buffer; mutations to either do
+// not affect the other. Non-destructive: buffer state is unchanged.
+func (rb *RingBuffer[T]) Snapshot() []T {
+	if rb.size == 0 {
+		return nil
+	}
+	h, t := rb.segments()
+	out := make([]T, len(h)+len(t))
+	n := copy(out, h)
+	copy(out[n:], t)
+	return out
+}
+
 // Len returns the number of items currently in the buffer.
 func (rb *RingBuffer[T]) Len() int {
 	return rb.size
