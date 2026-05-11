@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-11
+
 ### Added
 
 - `RingBuffer.Snapshot()` and `RingQueue.Snapshot()` — non-destructive FIFO copy. Returns `nil` when empty. Tracking: [#9](https://github.com/maxence2997/carousel/issues/9)
@@ -70,7 +72,8 @@
 - `ErrFull` — returned by `Enqueue` when the queue is at capacity
 - `ErrClosed` — returned by `Enqueue`, `ForceEnqueue`, and `Pop` after `Close` is called
 
-[Unreleased]: https://github.com/maxence2997/carousel/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/maxence2997/carousel/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/maxence2997/carousel/compare/v1.0.4...v1.1.0
 [1.0.4]: https://github.com/maxence2997/carousel/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/maxence2997/carousel/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/maxence2997/carousel/compare/v1.0.1...v1.0.2
