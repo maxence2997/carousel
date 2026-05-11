@@ -98,6 +98,10 @@ Maximum number of items the queue can hold. Fixed at construction time.
 
 Removes and returns all current items in FIFO order without blocking. Returns `nil` if the queue is empty. Useful for flushing remaining items after `Close`.
 
+**`Snapshot() []T`**
+
+Returns a copy of all current items in FIFO order without removing them. Returns `nil` if the queue is empty. Non-destructive: queue state is unchanged. Holds the queue mutex for the duration of the in-package copy (no user code runs under the lock); lock hold time is O(N) where N = `Len()` at the moment of the call. Independence of the returned slice is shallow — see `RingBuffer.Snapshot` for details.
+
 ---
 
 ## Benchmarks
