@@ -463,6 +463,30 @@ func TestRingQueue_G5_SnapshotAfterCloseStillReturnsItems(t *testing.T) {
 	assert.Equal(t, 2, q.Len())
 }
 
+// TestRingQueue_G6_SnapshotFIFOOrderWrapAround forces the internal buffer into
+// a wrapped state (head > 0, region split across array end) so the delegation
+// through RingBuffer.segments() exercises the two-segment copy path end-to-end.
+// G4's monotonicity check passes trivially when len(snap) < 2, so this test is
+// the load-bearing assertion that RingQueue.Snapshot preserves FIFO order when
+// the live region wraps.
+func TestRingQueue_G6_SnapshotFIFOOrderWrapAround(t *testing.T) {
+	t.Parallel()
+	q := carousel.NewRingQueue[int](3)
+	defer q.Close()
+	require.NoError(t, q.Enqueue(1))
+	require.NoError(t, q.Enqueue(2))
+	require.NoError(t, q.Enqueue(3))
+
+	popped, err := q.Pop(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, 1, popped) // head advances to internal index 1
+
+	require.NoError(t, q.Enqueue(4)) // wraps write position to index 0
+
+	assert.Equal(t, []int{2, 3, 4}, q.Snapshot())
+	assert.Equal(t, 3, q.Len())
+}
+
 // ── Benchmarks ───────────────────────────────────────────────────────────────
 
 // BenchmarkRingQueue_ForceEnqueue measures single-goroutine ForceEnqueue
