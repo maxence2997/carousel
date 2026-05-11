@@ -126,7 +126,11 @@ func (rb *RingBuffer[T]) Cap() int {
 }
 
 // Clear removes all items and releases slot references for GC.
+// No-op when the buffer is already empty.
 func (rb *RingBuffer[T]) Clear() {
+	if rb.size == 0 {
+		return
+	}
 	h, t := rb.segments()
 	clear(h)
 	clear(t) // no-op when t is nil
